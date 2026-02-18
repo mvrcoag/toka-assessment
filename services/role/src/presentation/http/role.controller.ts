@@ -6,8 +6,10 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
+import { CheckRoleExistsUseCase } from '../../application/use-cases/check-role-exists.use-case';
 import { CreateRoleUseCase } from '../../application/use-cases/create-role.use-case';
 import { DeleteRoleUseCase } from '../../application/use-cases/delete-role.use-case';
 import { GetRoleUseCase } from '../../application/use-cases/get-role.use-case';
@@ -28,12 +30,22 @@ export class RoleController {
     private readonly deleteRole: DeleteRoleUseCase,
     private readonly getRole: GetRoleUseCase,
     private readonly listRoles: ListRolesUseCase,
+    private readonly checkRoleExists: CheckRoleExistsUseCase,
   ) {}
 
   @Get()
   async list(): Promise<RoleResponseDto[]> {
     const roles = await this.listRoles.execute();
     return roles.map((role) => this.toResponse(role));
+  }
+
+  @Get('exists')
+  async exists(@Query('id') id?: string): Promise<{ exists: boolean }> {
+    if (!id) {
+      return { exists: false };
+    }
+    const exists = await this.checkRoleExists.execute(id);
+    return { exists };
   }
 
   @Get(':id')

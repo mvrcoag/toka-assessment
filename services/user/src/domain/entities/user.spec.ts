@@ -1,7 +1,7 @@
 import { User } from './user';
 import { Email } from '../value-objects/email';
 import { PasswordHash } from '../value-objects/password-hash';
-import { Role } from '../value-objects/role';
+import { RoleId } from '../value-objects/role-id';
 import { UserId } from '../value-objects/user-id';
 import { UserName } from '../value-objects/user-name';
 
@@ -12,12 +12,12 @@ describe('User', () => {
       name: UserName.create('Toka User'),
       email: Email.create('user@toka.local'),
       passwordHash: PasswordHash.create('hash'),
-      role: Role.create('user'),
+      roleId: RoleId.create('role-1'),
     });
 
     user.rename(UserName.create('New Name'));
     user.changeEmail(Email.create('new@toka.local'));
-    user.changeRole(Role.create('admin'));
+    user.changeRole(RoleId.create('role-2'));
     user.changePassword(PasswordHash.create('hash2'));
     user.markDeleted();
 

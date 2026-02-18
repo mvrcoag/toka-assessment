@@ -5,7 +5,7 @@ import { Scope } from '../../domain/value-objects/scope';
 import { User } from '../../domain/entities/user';
 import { Email } from '../../domain/value-objects/email';
 import { PasswordHash } from '../../domain/value-objects/password-hash';
-import { Role } from '../../domain/value-objects/role';
+import { RoleId } from '../../domain/value-objects/role-id';
 import { UserId } from '../../domain/value-objects/user-id';
 import { UserName } from '../../domain/value-objects/user-name';
 
@@ -15,7 +15,7 @@ describe('RefreshTokenUseCase', () => {
     name: UserName.create('Toka User'),
     email: Email.create('user@toka.local'),
     passwordHash: PasswordHash.create('hash'),
-    role: Role.create('user'),
+    roleId: RoleId.create('role-1'),
   });
 
   it('rotates refresh token and issues new tokens', async () => {
@@ -74,6 +74,14 @@ describe('RefreshTokenUseCase', () => {
         save: async () => undefined,
       },
       {
+        getRoleAbilities: async () => ({
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: true,
+        }),
+      },
+      {
         blacklist: async () => undefined,
         isBlacklisted: async () => false,
       },
@@ -126,6 +134,14 @@ describe('RefreshTokenUseCase', () => {
         save: async () => undefined,
       },
       {
+        getRoleAbilities: async () => ({
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: true,
+        }),
+      },
+      {
         blacklist: async () => undefined,
         isBlacklisted: async () => true,
       },
@@ -168,6 +184,14 @@ describe('RefreshTokenUseCase', () => {
         findByEmail: async () => user,
         findById: async () => user,
         save: async () => undefined,
+      },
+      {
+        getRoleAbilities: async () => ({
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: true,
+        }),
       },
       {
         blacklist: async () => undefined,
@@ -226,6 +250,14 @@ describe('RefreshTokenUseCase', () => {
         findByEmail: async () => user,
         findById: async () => user,
         save: async () => undefined,
+      },
+      {
+        getRoleAbilities: async () => ({
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: true,
+        }),
       },
       {
         blacklist: async () => undefined,

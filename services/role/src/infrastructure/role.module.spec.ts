@@ -13,6 +13,7 @@ import { RabbitMqEventBus } from './rabbitmq/rabbitmq.event-bus';
 import { CreateRoleUseCase } from '../application/use-cases/create-role.use-case';
 import { UpdateRoleUseCase } from '../application/use-cases/update-role.use-case';
 import { DeleteRoleUseCase } from '../application/use-cases/delete-role.use-case';
+import { CheckRoleExistsUseCase } from '../application/use-cases/check-role-exists.use-case';
 import { GetRoleUseCase } from '../application/use-cases/get-role.use-case';
 import { ListRolesUseCase } from '../application/use-cases/list-roles.use-case';
 
@@ -30,12 +31,14 @@ describe('RoleModule providers', () => {
     const create = byToken(CreateRoleUseCase).useFactory(repo, eventBus);
     const update = byToken(UpdateRoleUseCase).useFactory(repo, eventBus);
     const del = byToken(DeleteRoleUseCase).useFactory(repo, eventBus);
+    const check = byToken(CheckRoleExistsUseCase).useFactory(repo);
     const get = byToken(GetRoleUseCase).useFactory(repo);
     const list = byToken(ListRolesUseCase).useFactory(repo);
 
     expect(create).toBeInstanceOf(CreateRoleUseCase);
     expect(update).toBeInstanceOf(UpdateRoleUseCase);
     expect(del).toBeInstanceOf(DeleteRoleUseCase);
+    expect(check).toBeInstanceOf(CheckRoleExistsUseCase);
     expect(get).toBeInstanceOf(GetRoleUseCase);
     expect(list).toBeInstanceOf(ListRolesUseCase);
 

@@ -1,7 +1,7 @@
 import { DomainError } from '../errors/domain-error';
 import { Email } from './email';
 import { PasswordHash } from './password-hash';
-import { Role } from './role';
+import { RoleId } from './role-id';
 import { UserId } from './user-id';
 import { UserName } from './user-name';
 
@@ -19,13 +19,13 @@ describe('ValueObjects', () => {
     expect(() => UserName.create('A')).toThrow(DomainError);
   });
 
-  it('creates user id and role', () => {
+  it('creates user id and role id', () => {
     const id = UserId.create(' user-1 ');
-    const role = Role.create('admin');
+    const role = RoleId.create('role-1');
     expect(id.value).toBe('user-1');
-    expect(role.value).toBe('admin');
+    expect(role.value).toBe('role-1');
     expect(() => UserId.create('')).toThrow(DomainError);
-    expect(() => Role.create('')).toThrow(DomainError);
+    expect(() => RoleId.create('')).toThrow(DomainError);
   });
 
   it('creates password hash', () => {

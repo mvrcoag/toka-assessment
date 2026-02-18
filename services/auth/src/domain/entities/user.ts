@@ -2,7 +2,7 @@ import { DomainEvent } from '../events/domain-event';
 import { UserLoggedInEvent } from '../events/user-logged-in.event';
 import { Email } from '../value-objects/email';
 import { PasswordHash } from '../value-objects/password-hash';
-import { Role } from '../value-objects/role';
+import { RoleId } from '../value-objects/role-id';
 import { UserId } from '../value-objects/user-id';
 import { UserName } from '../value-objects/user-name';
 
@@ -11,7 +11,7 @@ export interface UserProps {
   name: UserName;
   email: Email;
   passwordHash: PasswordHash;
-  role: Role;
+  roleId: RoleId;
 }
 
 export class User {
@@ -42,8 +42,8 @@ export class User {
     return this.props.passwordHash;
   }
 
-  get role(): Role {
-    return this.props.role;
+  get roleId(): RoleId {
+    return this.props.roleId;
   }
 
   recordLogin(): void {

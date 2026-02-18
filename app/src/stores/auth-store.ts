@@ -6,7 +6,13 @@ export interface AuthUser {
   sub: string
   name: string
   email: string
-  role: string
+  roleId: string
+  roleAbilities?: {
+    canView?: boolean
+    canCreate?: boolean
+    canUpdate?: boolean
+    canDelete?: boolean
+  }
 }
 
 interface AuthState {

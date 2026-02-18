@@ -5,7 +5,7 @@ import { Scope } from '../../domain/value-objects/scope';
 import { User } from '../../domain/entities/user';
 import { Email } from '../../domain/value-objects/email';
 import { PasswordHash } from '../../domain/value-objects/password-hash';
-import { Role } from '../../domain/value-objects/role';
+import { RoleId } from '../../domain/value-objects/role-id';
 import { UserId } from '../../domain/value-objects/user-id';
 import { UserName } from '../../domain/value-objects/user-name';
 
@@ -15,7 +15,7 @@ describe('ExchangeAuthorizationCodeUseCase', () => {
     name: UserName.create('Toka User'),
     email: Email.create('user@toka.local'),
     passwordHash: PasswordHash.create('hash'),
-    role: Role.create('user'),
+    roleId: RoleId.create('role-1'),
   });
 
   it('exchanges auth code for tokens', async () => {
@@ -42,6 +42,14 @@ describe('ExchangeAuthorizationCodeUseCase', () => {
         findByEmail: async () => user,
         findById: async () => user,
         save: async () => undefined,
+      },
+      {
+        getRoleAbilities: async () => ({
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: true,
+        }),
       },
       {
         issueAccessToken: async () => ({
@@ -107,6 +115,14 @@ describe('ExchangeAuthorizationCodeUseCase', () => {
         save: async () => undefined,
       },
       {
+        getRoleAbilities: async () => ({
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: true,
+        }),
+      },
+      {
         issueAccessToken: async () => ({ token: '', jti: '', expiresAt: new Date() }),
         issueIdToken: async () => ({ token: '', jti: '', expiresAt: new Date() }),
         issueRefreshToken: async () => ({ token: '', jti: '', expiresAt: new Date() }),
@@ -159,6 +175,14 @@ describe('ExchangeAuthorizationCodeUseCase', () => {
         findByEmail: async () => user,
         findById: async () => user,
         save: async () => undefined,
+      },
+      {
+        getRoleAbilities: async () => ({
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: true,
+        }),
       },
       {
         issueAccessToken: async () => ({ token: '', jti: '', expiresAt: new Date() }),
@@ -218,6 +242,14 @@ describe('ExchangeAuthorizationCodeUseCase', () => {
         findByEmail: async () => null,
         findById: async () => null,
         save: async () => undefined,
+      },
+      {
+        getRoleAbilities: async () => ({
+          canView: true,
+          canCreate: true,
+          canUpdate: true,
+          canDelete: true,
+        }),
       },
       {
         issueAccessToken: async () => ({ token: '', jti: '', expiresAt: new Date() }),

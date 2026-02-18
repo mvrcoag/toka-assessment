@@ -14,6 +14,6 @@ export class UserEntity {
   @Column({ type: 'text', name: 'password_hash' })
   passwordHash!: string;
 
-  @Column({ type: 'text' })
-  role!: string;
+  @Column({ type: 'uuid', name: 'role_id' })
+  roleId!: string;
 }

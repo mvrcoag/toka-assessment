@@ -8,6 +8,7 @@ import { RefreshTokenRepository } from '../ports/refresh-token-repository';
 import { TokenBlacklist } from '../ports/token-blacklist';
 import { TokenService } from '../ports/token-service';
 import { UserRepository } from '../ports/user-repository';
+import { RoleLookup } from '../ports/role-lookup';
 
 export interface RefreshTokenInput {
   refreshToken: string;
@@ -21,6 +22,7 @@ export class RefreshTokenUseCase {
     private readonly tokenService: TokenService,
     private readonly clientRepository: OAuthClientRepository,
     private readonly userRepository: UserRepository,
+    private readonly roleLookup: RoleLookup,
     private readonly tokenBlacklist: TokenBlacklist,
     private readonly clock: Clock,
   ) {}
@@ -64,6 +66,8 @@ export class RefreshTokenUseCase {
       throw new ApplicationError('User not found', 404);
     }
 
+    const roleAbilities = await this.resolveRoleAbilities(user.roleId.value);
+
     await this.refreshTokenRepository.revoke(verified.jti);
     await this.tokenBlacklist.blacklist(verified.jti, record.token.expiresAt);
 
@@ -71,7 +75,8 @@ export class RefreshTokenUseCase {
       sub: user.id.value,
       email: user.email.value,
       name: user.name.value,
-      role: user.role.value,
+      role: user.roleId.value,
+      roleAbilities,
       scope: record.token.scope.toString(),
       clientId: input.clientId,
     });
@@ -80,7 +85,8 @@ export class RefreshTokenUseCase {
       sub: user.id.value,
       email: user.email.value,
       name: user.name.value,
-      role: user.role.value,
+      role: user.roleId.value,
+      roleAbilities,
       aud: input.clientId,
     });
 
@@ -114,5 +120,20 @@ export class RefreshTokenUseCase {
       tokenType: 'Bearer',
       expiresIn,
     };
+  }
+
+  private async resolveRoleAbilities(roleId: string) {
+    try {
+      const abilities = await this.roleLookup.getRoleAbilities(roleId);
+      if (!abilities) {
+        throw new ApplicationError('Role not found', 404);
+      }
+      return abilities;
+    } catch (error) {
+      if (error instanceof ApplicationError) {
+        throw error;
+      }
+      throw new ApplicationError('Unable to load role abilities', 502);
+    }
   }
 }

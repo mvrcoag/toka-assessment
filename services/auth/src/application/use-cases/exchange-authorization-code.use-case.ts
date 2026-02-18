@@ -7,6 +7,7 @@ import { OAuthClientRepository } from '../ports/oauth-client-repository';
 import { RefreshTokenRepository } from '../ports/refresh-token-repository';
 import { TokenService } from '../ports/token-service';
 import { UserRepository } from '../ports/user-repository';
+import { RoleLookup } from '../ports/role-lookup';
 
 export interface ExchangeAuthorizationCodeInput {
   code: string;
@@ -20,6 +21,7 @@ export class ExchangeAuthorizationCodeUseCase {
     private readonly authCodeRepository: AuthCodeRepository,
     private readonly refreshTokenRepository: RefreshTokenRepository,
     private readonly userRepository: UserRepository,
+    private readonly roleLookup: RoleLookup,
     private readonly tokenService: TokenService,
     private readonly clientRepository: OAuthClientRepository,
     private readonly clock: Clock,
@@ -53,11 +55,14 @@ export class ExchangeAuthorizationCodeUseCase {
       throw new ApplicationError('User not found', 404);
     }
 
+    const roleAbilities = await this.resolveRoleAbilities(user.roleId.value);
+
     const accessToken = await this.tokenService.issueAccessToken({
       sub: user.id.value,
       email: user.email.value,
       name: user.name.value,
-      role: user.role.value,
+      role: user.roleId.value,
+      roleAbilities,
       scope: authCode.scope.toString(),
       clientId: input.clientId,
     });
@@ -66,7 +71,8 @@ export class ExchangeAuthorizationCodeUseCase {
       sub: user.id.value,
       email: user.email.value,
       name: user.name.value,
-      role: user.role.value,
+      role: user.roleId.value,
+      roleAbilities,
       aud: input.clientId,
     });
 
@@ -100,5 +106,20 @@ export class ExchangeAuthorizationCodeUseCase {
       tokenType: 'Bearer',
       expiresIn,
     };
+  }
+
+  private async resolveRoleAbilities(roleId: string) {
+    try {
+      const abilities = await this.roleLookup.getRoleAbilities(roleId);
+      if (!abilities) {
+        throw new ApplicationError('Role not found', 404);
+      }
+      return abilities;
+    } catch (error) {
+      if (error instanceof ApplicationError) {
+        throw error;
+      }
+      throw new ApplicationError('Unable to load role abilities', 502);
+    }
   }
 }

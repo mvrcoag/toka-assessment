@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { useAuth } from '@/hooks/use-auth'
+import { useRoleOptions } from '@/hooks/use-role-options'
 import {
   ClipboardList,
   LayoutDashboard,
@@ -21,6 +22,8 @@ const navItems = [
 
 export function AppShell() {
   const { user, logout } = useAuth()
+  const { roles } = useRoleOptions()
+  const roleLabel = roles.find((role) => role.id === user?.roleId)?.name ?? user?.roleId
 
   return (
     <div className="min-h-screen">
@@ -60,7 +63,7 @@ export function AppShell() {
             <p className="text-muted-foreground">Signed in</p>
             <p className="font-medium">{user?.name ?? 'Unknown user'}</p>
             <p className="text-xs text-muted-foreground">{user?.email ?? 'No email'}</p>
-            {user?.role ? <Badge variant="secondary">{user.role}</Badge> : null}
+            {roleLabel ? <Badge variant="secondary">{roleLabel}</Badge> : null}
             <Button variant="outline" className="mt-3 w-full" onClick={logout}>
               Sign out
             </Button>
@@ -89,7 +92,7 @@ export function AppShell() {
               ))}
               <div className="flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs">
                 <span className="font-medium">{user?.name ?? 'Unknown user'}</span>
-                {user?.role ? <Badge variant="secondary">{user.role}</Badge> : null}
+                {roleLabel ? <Badge variant="secondary">{roleLabel}</Badge> : null}
                 <Button variant="ghost" size="sm" onClick={logout}>
                   Sign out
                 </Button>

@@ -7,6 +7,8 @@ export class UserConfig {
   readonly authJwksUri: string;
   readonly rabbitmqUrl: string;
   readonly rabbitmqExchange: string;
+  readonly roleServiceUrl: string;
+  readonly internalServiceToken: string;
 
   constructor() {
     this.postgresUrl =
@@ -19,5 +21,9 @@ export class UserConfig {
     this.rabbitmqUrl =
       process.env.RABBITMQ_URL ?? 'amqp://toka:toka_password@rabbitmq:5672';
     this.rabbitmqExchange = process.env.RABBITMQ_EXCHANGE ?? 'toka.events';
+    this.roleServiceUrl =
+      process.env.ROLE_SERVICE_URL ?? 'http://role:3003/roles';
+    this.internalServiceToken =
+      process.env.INTERNAL_SERVICE_TOKEN ?? 'toka-internal';
   }
 }

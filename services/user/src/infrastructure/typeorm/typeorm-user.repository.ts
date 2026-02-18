@@ -5,7 +5,7 @@ import { UserRepository } from '../../application/ports/user-repository';
 import { User } from '../../domain/entities/user';
 import { Email } from '../../domain/value-objects/email';
 import { PasswordHash } from '../../domain/value-objects/password-hash';
-import { Role } from '../../domain/value-objects/role';
+import { RoleId } from '../../domain/value-objects/role-id';
 import { UserId } from '../../domain/value-objects/user-id';
 import { UserName } from '../../domain/value-objects/user-name';
 import { UserEntity } from './user.entity';
@@ -38,7 +38,7 @@ export class TypeOrmUserRepository implements UserRepository {
       name: user.name.value,
       email: user.email.value,
       passwordHash: user.passwordHash.value,
-      role: user.role.value,
+      roleId: user.roleId.value,
     });
     await this.repository.save(entity);
   }
@@ -53,7 +53,7 @@ export class TypeOrmUserRepository implements UserRepository {
       name: UserName.create(entity.name),
       email: Email.create(entity.email),
       passwordHash: PasswordHash.create(entity.passwordHash),
-      role: Role.create(entity.role),
+      roleId: RoleId.create(entity.roleId),
     });
   }
 }

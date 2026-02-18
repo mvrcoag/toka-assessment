@@ -37,7 +37,8 @@ export class GetUserInfoUseCase {
       sub: user.id.value,
       name: user.name.value,
       email: user.email.value,
-      role: user.role.value,
+      roleId: user.roleId.value,
+      roleAbilities: verified.payload.roleAbilities,
     };
   }
 }

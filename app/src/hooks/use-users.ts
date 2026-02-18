@@ -28,7 +28,7 @@ export function useUsers() {
     refresh()
   }, [refresh])
 
-  const createUser = useCallback(async (input: { name: string; email: string; password: string; role: string }) => {
+  const createUser = useCallback(async (input: { name: string; email: string; password: string; roleId: string }) => {
     setIsSaving(true)
     try {
       await usersService.create(input)
@@ -44,7 +44,7 @@ export function useUsers() {
     }
   }, [refresh])
 
-  const updateUser = useCallback(async (id: string, input: Partial<{ name: string; email: string; password: string; role: string }>) => {
+  const updateUser = useCallback(async (id: string, input: Partial<{ name: string; email: string; password: string; roleId: string }>) => {
     setIsSaving(true)
     try {
       await usersService.update(id, input)

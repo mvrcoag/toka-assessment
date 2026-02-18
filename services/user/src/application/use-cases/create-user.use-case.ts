@@ -1,18 +1,20 @@
 import { User } from '../../domain/entities/user';
 import { Email } from '../../domain/value-objects/email';
-import { Role } from '../../domain/value-objects/role';
+import { RoleId } from '../../domain/value-objects/role-id';
 import { UserId } from '../../domain/value-objects/user-id';
 import { UserName } from '../../domain/value-objects/user-name';
 import { ApplicationError } from '../errors/application-error';
 import { EventBus } from '../ports/event-bus';
 import { PasswordHasher } from '../ports/password-hasher';
+import { RoleLookup } from '../ports/role-lookup';
 import { UserRepository } from '../ports/user-repository';
 
 export interface CreateUserInput {
   name: string;
   email: string;
   password: string;
-  role: string;
+  roleId: string;
+  accessToken?: string;
 }
 
 export class CreateUserUseCase {
@@ -20,6 +22,7 @@ export class CreateUserUseCase {
     private readonly repository: UserRepository,
     private readonly hasher: PasswordHasher,
     private readonly eventBus: EventBus,
+    private readonly roleLookup: RoleLookup,
   ) {}
 
   async execute(input: CreateUserInput): Promise<User> {
@@ -29,17 +32,36 @@ export class CreateUserUseCase {
       throw new ApplicationError('Email already exists', 409);
     }
 
+    const roleExists = await this.assertRoleExists(
+      input.roleId,
+      input.accessToken,
+    );
+    if (!roleExists) {
+      throw new ApplicationError('Role does not exist', 400);
+    }
+
     const passwordHash = await this.hasher.hash(input.password);
     const user = User.create({
       id: UserId.generate(),
       name: UserName.create(input.name),
       email,
       passwordHash,
-      role: Role.create(input.role),
+      roleId: RoleId.create(input.roleId),
     });
 
     await this.repository.save(user);
     await this.eventBus.publishAll(user.pullDomainEvents());
     return user;
+  }
+
+  private async assertRoleExists(
+    roleId: string,
+    accessToken?: string,
+  ): Promise<boolean> {
+    try {
+      return await this.roleLookup.exists(roleId, accessToken);
+    } catch {
+      throw new ApplicationError('Unable to validate role', 502);
+    }
   }
 }

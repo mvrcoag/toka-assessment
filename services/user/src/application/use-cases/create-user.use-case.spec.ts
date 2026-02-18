@@ -3,7 +3,7 @@ import { ApplicationError } from '../errors/application-error';
 import { User } from '../../domain/entities/user';
 import { Email } from '../../domain/value-objects/email';
 import { PasswordHash } from '../../domain/value-objects/password-hash';
-import { Role } from '../../domain/value-objects/role';
+import { RoleId } from '../../domain/value-objects/role-id';
 import { UserId } from '../../domain/value-objects/user-id';
 import { UserName } from '../../domain/value-objects/user-name';
 
@@ -24,13 +24,16 @@ describe('CreateUserUseCase', () => {
         publish: async () => undefined,
         publishAll: async () => undefined,
       },
+      {
+        exists: async () => true,
+      },
     );
 
     const user = await useCase.execute({
       name: 'Toka User',
       email: 'user@toka.local',
       password: 'secret123',
-      role: 'user',
+      roleId: 'role-1',
     });
 
     expect(user.email.value).toBe('user@toka.local');
@@ -42,7 +45,7 @@ describe('CreateUserUseCase', () => {
       name: UserName.create('Toka User'),
       email: Email.create('user@toka.local'),
       passwordHash: PasswordHash.create('hash'),
-      role: Role.create('user'),
+      roleId: RoleId.create('role-1'),
     });
     const useCase = new CreateUserUseCase(
       {
@@ -59,6 +62,9 @@ describe('CreateUserUseCase', () => {
         publish: async () => undefined,
         publishAll: async () => undefined,
       },
+      {
+        exists: async () => true,
+      },
     );
 
     await expect(
@@ -66,7 +72,7 @@ describe('CreateUserUseCase', () => {
         name: 'Toka User',
         email: 'user@toka.local',
         password: 'secret123',
-        role: 'user',
+        roleId: 'role-1',
       }),
     ).rejects.toBeInstanceOf(ApplicationError);
   });

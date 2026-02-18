@@ -4,7 +4,7 @@ import { UserEntity } from './user.entity';
 import { Email } from '../../domain/value-objects/email';
 import { User } from '../../domain/entities/user';
 import { PasswordHash } from '../../domain/value-objects/password-hash';
-import { Role } from '../../domain/value-objects/role';
+import { RoleId } from '../../domain/value-objects/role-id';
 import { UserId } from '../../domain/value-objects/user-id';
 import { UserName } from '../../domain/value-objects/user-name';
 
@@ -27,7 +27,7 @@ describe('TypeOrmUserRepository', () => {
       name: 'Toka User',
       email: 'user@toka.local',
       passwordHash: 'hash',
-      role: 'user',
+      roleId: 'role-1',
     } as UserEntity;
     const { sut } = buildRepo([entity]);
 
@@ -42,7 +42,7 @@ describe('TypeOrmUserRepository', () => {
         name: 'Toka User',
         email: 'user@toka.local',
         passwordHash: 'hash',
-        role: 'user',
+        roleId: 'role-1',
       } as UserEntity,
     ];
     const { sut } = buildRepo(entities);
@@ -57,7 +57,7 @@ describe('TypeOrmUserRepository', () => {
       name: UserName.create('Toka User'),
       email: Email.create('user@toka.local'),
       passwordHash: PasswordHash.create('hash'),
-      role: Role.create('user'),
+      roleId: RoleId.create('role-1'),
     });
 
     await sut.save(user);

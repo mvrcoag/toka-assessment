@@ -25,6 +25,9 @@ export class AuthConfig implements AuthSettings {
   readonly clientSecret: string;
   readonly redirectUris: string[];
   readonly allowedScopes: string[];
+  readonly userServiceUrl: string;
+  readonly roleServiceUrl: string;
+  readonly internalServiceToken: string;
 
 
   readonly jwtKeyId: string;
@@ -65,6 +68,13 @@ export class AuthConfig implements AuthSettings {
       .map((value) => value.trim())
       .filter(Boolean);
     this.allowedScopes = this.supportedScopes;
+
+    this.userServiceUrl =
+      process.env.USER_SERVICE_URL ?? 'http://user:3002/internal/users';
+    this.roleServiceUrl =
+      process.env.ROLE_SERVICE_URL ?? 'http://role:3003/internal/roles';
+    this.internalServiceToken =
+      process.env.INTERNAL_SERVICE_TOKEN ?? 'toka-internal';
 
     this.jwtKeyId = process.env.JWT_KID ?? 'toka-key-1';
     this.jwtPrivateKey = process.env.JWT_PRIVATE_KEY;

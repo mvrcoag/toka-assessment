@@ -23,6 +23,7 @@ describe('RoleController', () => {
       { execute: async () => undefined } as any,
       { execute: async () => role } as any,
       { execute: async () => [role] } as any,
+      { execute: async () => true } as any,
     );
 
     const result = await controller.list();
@@ -36,6 +37,7 @@ describe('RoleController', () => {
       { execute: async () => undefined } as any,
       { execute: async () => role } as any,
       { execute: async () => [role] } as any,
+      { execute: async () => true } as any,
     );
 
     const result = await controller.get('role-1');
@@ -49,6 +51,7 @@ describe('RoleController', () => {
       { execute: async () => undefined } as any,
       { execute: async () => role } as any,
       { execute: async () => [role] } as any,
+      { execute: async () => true } as any,
     );
 
     const result = await controller.create({
@@ -68,6 +71,7 @@ describe('RoleController', () => {
       { execute: async () => undefined } as any,
       { execute: async () => role } as any,
       { execute: async () => [role] } as any,
+      { execute: async () => true } as any,
     );
 
     const result = await controller.update('role-1', { name: 'Manager' });
@@ -81,6 +85,7 @@ describe('RoleController', () => {
       { execute: async () => undefined } as any,
       { execute: async () => role } as any,
       { execute: async () => [role] } as any,
+      { execute: async () => true } as any,
     );
 
     await expect(controller.remove('role-1')).resolves.toBeUndefined();

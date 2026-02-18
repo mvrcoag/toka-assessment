@@ -3,7 +3,7 @@ import { ApplicationError } from '../errors/application-error';
 import { User } from '../../domain/entities/user';
 import { Email } from '../../domain/value-objects/email';
 import { PasswordHash } from '../../domain/value-objects/password-hash';
-import { Role } from '../../domain/value-objects/role';
+import { RoleId } from '../../domain/value-objects/role-id';
 import { UserId } from '../../domain/value-objects/user-id';
 import { UserName } from '../../domain/value-objects/user-name';
 
@@ -13,7 +13,7 @@ describe('GetUserInfoUseCase', () => {
     name: UserName.create('Toka User'),
     email: Email.create('user@toka.local'),
     passwordHash: PasswordHash.create('hash'),
-    role: Role.create('user'),
+    roleId: RoleId.create('role-1'),
   });
 
   it('returns user info from access token', async () => {
@@ -24,7 +24,13 @@ describe('GetUserInfoUseCase', () => {
             sub: user.id.value,
             email: user.email.value,
             name: user.name.value,
-            role: user.role.value,
+            role: user.roleId.value,
+            roleAbilities: {
+              canView: true,
+              canCreate: true,
+              canUpdate: true,
+              canDelete: true,
+            },
             scope: 'openid',
             clientId: 'client-1',
           },
@@ -54,6 +60,7 @@ describe('GetUserInfoUseCase', () => {
     const info = await useCase.execute('access');
     expect(info.email).toBe(user.email.value);
     expect(info.sub).toBe(user.id.value);
+    expect(info.roleAbilities?.canView).toBe(true);
   });
 
   it('rejects blacklisted access token', async () => {
@@ -64,7 +71,13 @@ describe('GetUserInfoUseCase', () => {
             sub: user.id.value,
             email: user.email.value,
             name: user.name.value,
-            role: user.role.value,
+            role: user.roleId.value,
+            roleAbilities: {
+              canView: true,
+              canCreate: false,
+              canUpdate: false,
+              canDelete: false,
+            },
             scope: 'openid',
             clientId: 'client-1',
           },

@@ -9,6 +9,7 @@ import {
   EVENT_BUS,
   OAUTH_CLIENT_REPOSITORY,
   PASSWORD_HASHER,
+  ROLE_LOOKUP,
   REFRESH_TOKEN_REPOSITORY,
   TOKEN_BLACKLIST,
   TOKEN_SERVICE,
@@ -24,7 +25,8 @@ import { RedisTokenBlacklist } from './persistence/redis-token-blacklist';
 import { StaticOAuthClientRepository } from './persistence/static-client.repository';
 import { JwtTokenService } from './security/jwt-token.service';
 import { RedisClient } from './redis/redis.client';
-import { TypeOrmUserRepository } from './typeorm/typeorm-user.repository';
+import { HttpUserRepository } from './http/http-user.repository';
+import { HttpRoleLookup } from './http/http-role-lookup';
 import { RabbitMqEventBus } from './rabbitmq/rabbitmq.event-bus';
 import { ValidateAuthorizationRequestUseCase } from '../application/use-cases/validate-authorization-request.use-case';
 import { LoginAndIssueCodeUseCase } from '../application/use-cases/login-and-issue-code.use-case';
@@ -56,7 +58,10 @@ describe('AuthModule providers', () => {
       findByEmail: jest.fn(),
       findById: jest.fn(),
       save: jest.fn(),
-    } as unknown as TypeOrmUserRepository;
+    } as unknown as HttpUserRepository;
+    const roleLookup = {
+      getRoleAbilities: jest.fn(),
+    } as unknown as HttpRoleLookup;
     const clientRepo = byToken(OAUTH_CLIENT_REPOSITORY).useFactory(config);
     const authCodeRepo = byToken(AUTH_CODE_REPOSITORY).useFactory(redis);
     const refreshTokenRepo = byToken(REFRESH_TOKEN_REPOSITORY).useFactory(redis);
@@ -64,7 +69,8 @@ describe('AuthModule providers', () => {
     const tokenService = byToken(TOKEN_SERVICE).useFactory(config, clock, config);
     expect(byToken(EVENT_BUS).useExisting).toBe(RabbitMqEventBus);
 
-    expect(byToken(USER_REPOSITORY).useExisting).toBe(TypeOrmUserRepository);
+    expect(byToken(USER_REPOSITORY).useExisting).toBe(HttpUserRepository);
+    expect(byToken(ROLE_LOOKUP).useExisting).toBe(HttpRoleLookup);
     expect(clientRepo).toBeInstanceOf(StaticOAuthClientRepository);
     expect(authCodeRepo).toBeInstanceOf(RedisAuthCodeRepository);
     expect(refreshTokenRepo).toBeInstanceOf(RedisRefreshTokenRepository);
@@ -84,6 +90,7 @@ describe('AuthModule providers', () => {
       authCodeRepo,
       refreshTokenRepo,
       userRepo,
+      roleLookup,
       tokenService,
       clientRepo,
       clock,
@@ -93,6 +100,7 @@ describe('AuthModule providers', () => {
       tokenService,
       clientRepo,
       userRepo,
+      roleLookup,
       blacklist,
       clock,
     );

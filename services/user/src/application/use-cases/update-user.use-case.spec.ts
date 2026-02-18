@@ -3,7 +3,7 @@ import { ApplicationError } from '../errors/application-error';
 import { User } from '../../domain/entities/user';
 import { Email } from '../../domain/value-objects/email';
 import { PasswordHash } from '../../domain/value-objects/password-hash';
-import { Role } from '../../domain/value-objects/role';
+import { RoleId } from '../../domain/value-objects/role-id';
 import { UserId } from '../../domain/value-objects/user-id';
 import { UserName } from '../../domain/value-objects/user-name';
 
@@ -13,7 +13,7 @@ describe('UpdateUserUseCase', () => {
     name: UserName.create('Toka User'),
     email: Email.create('user@toka.local'),
     passwordHash: PasswordHash.create('hash'),
-    role: Role.create('user'),
+    roleId: RoleId.create('role-1'),
   });
 
   it('updates user fields', async () => {
@@ -32,6 +32,9 @@ describe('UpdateUserUseCase', () => {
         publish: async () => undefined,
         publishAll: async () => undefined,
       },
+      {
+        exists: async () => true,
+      },
     );
 
     const updated = await useCase.execute({
@@ -39,12 +42,12 @@ describe('UpdateUserUseCase', () => {
       name: 'New Name',
       email: 'new@toka.local',
       password: 'newpass',
-      role: 'admin',
+      roleId: 'role-2',
     });
 
     expect(updated.name.value).toBe('New Name');
     expect(updated.email.value).toBe('new@toka.local');
-    expect(updated.role.value).toBe('admin');
+    expect(updated.roleId.value).toBe('role-2');
   });
 
   it('rejects missing user', async () => {
@@ -63,6 +66,9 @@ describe('UpdateUserUseCase', () => {
         publish: async () => undefined,
         publishAll: async () => undefined,
       },
+      {
+        exists: async () => true,
+      },
     );
 
     await expect(useCase.execute({ id: 'missing' })).rejects.toBeInstanceOf(
@@ -76,7 +82,7 @@ describe('UpdateUserUseCase', () => {
       name: UserName.create('Other'),
       email: Email.create('dup@toka.local'),
       passwordHash: PasswordHash.create('hash'),
-      role: Role.create('user'),
+      roleId: RoleId.create('role-1'),
     });
     const useCase = new UpdateUserUseCase(
       {
@@ -92,6 +98,9 @@ describe('UpdateUserUseCase', () => {
       {
         publish: async () => undefined,
         publishAll: async () => undefined,
+      },
+      {
+        exists: async () => true,
       },
     );
 

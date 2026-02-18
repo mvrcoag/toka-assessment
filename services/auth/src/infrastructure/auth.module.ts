@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import {
   AUTH_CODE_GENERATOR,
   AUTH_CODE_REPOSITORY,
@@ -9,6 +8,7 @@ import {
   OAUTH_CLIENT_REPOSITORY,
   PASSWORD_HASHER,
   REFRESH_TOKEN_REPOSITORY,
+  ROLE_LOOKUP,
   TOKEN_BLACKLIST,
   TOKEN_SERVICE,
   USER_REPOSITORY,
@@ -22,6 +22,7 @@ import { RefreshTokenUseCase } from '../application/use-cases/refresh-token.use-
 import { ValidateAuthorizationRequestUseCase } from '../application/use-cases/validate-authorization-request.use-case';
 import { AuthController } from '../presentation/http/auth.controller';
 import { WellKnownController } from '../presentation/http/well-known.controller';
+import { UserRepository } from '../application/ports/user-repository';
 import { SystemClock } from './clock/system-clock';
 import { AuthConfig } from './config/auth.config';
 import { RedisAuthCodeRepository } from './persistence/redis-auth-code.repository';
@@ -33,29 +34,19 @@ import { RabbitMqEventBus } from './rabbitmq/rabbitmq.event-bus';
 import { BcryptPasswordHasher } from './security/bcrypt-password-hasher';
 import { JwtTokenService } from './security/jwt-token.service';
 import { RandomAuthCodeGenerator } from './security/random-auth-code.generator';
-import { TypeOrmUserRepository } from './typeorm/typeorm-user.repository';
-import { UserEntity } from './typeorm/user.entity';
+import { HttpUserRepository } from './http/http-user.repository';
+import { HttpRoleLookup } from './http/http-role-lookup';
+import { RoleLookup } from '../application/ports/role-lookup';
 
 @Module({
   imports: [
-    TypeOrmModule.forRootAsync({
-      useFactory: () => {
-        const config = new AuthConfig();
-        return {
-          type: 'postgres',
-          url: config.postgresUrl,
-          entities: [UserEntity],
-          synchronize: false,
-        };
-      },
-    }),
-    TypeOrmModule.forFeature([UserEntity]),
   ],
   controllers: [AuthController, WellKnownController],
   providers: [
     AuthConfig,
     RedisClient,
-    TypeOrmUserRepository,
+    HttpUserRepository,
+    HttpRoleLookup,
     RabbitMqEventBus,
     {
       provide: EVENT_BUS,
@@ -79,7 +70,11 @@ import { UserEntity } from './typeorm/user.entity';
     },
     {
       provide: USER_REPOSITORY,
-      useExisting: TypeOrmUserRepository,
+      useExisting: HttpUserRepository,
+    },
+    {
+      provide: ROLE_LOOKUP,
+      useExisting: HttpRoleLookup,
     },
     {
       provide: OAUTH_CLIENT_REPOSITORY,
@@ -116,7 +111,7 @@ import { UserEntity } from './typeorm/user.entity';
     {
       provide: LoginAndIssueCodeUseCase,
       useFactory: (
-        userRepository: TypeOrmUserRepository,
+        userRepository: UserRepository,
         hasher: BcryptPasswordHasher,
         authCodeRepository: RedisAuthCodeRepository,
         authCodeGenerator: RandomAuthCodeGenerator,
@@ -148,7 +143,8 @@ import { UserEntity } from './typeorm/user.entity';
       useFactory: (
         authCodeRepository: RedisAuthCodeRepository,
         refreshTokenRepository: RedisRefreshTokenRepository,
-        userRepository: TypeOrmUserRepository,
+        userRepository: UserRepository,
+        roleLookup: RoleLookup,
         tokenService: JwtTokenService,
         clientRepository: StaticOAuthClientRepository,
         clock: SystemClock,
@@ -157,6 +153,7 @@ import { UserEntity } from './typeorm/user.entity';
           authCodeRepository,
           refreshTokenRepository,
           userRepository,
+          roleLookup,
           tokenService,
           clientRepository,
           clock,
@@ -165,6 +162,7 @@ import { UserEntity } from './typeorm/user.entity';
         AUTH_CODE_REPOSITORY,
         REFRESH_TOKEN_REPOSITORY,
         USER_REPOSITORY,
+        ROLE_LOOKUP,
         TOKEN_SERVICE,
         OAUTH_CLIENT_REPOSITORY,
         CLOCK,
@@ -176,7 +174,8 @@ import { UserEntity } from './typeorm/user.entity';
         refreshTokenRepository: RedisRefreshTokenRepository,
         tokenService: JwtTokenService,
         clientRepository: StaticOAuthClientRepository,
-        userRepository: TypeOrmUserRepository,
+        userRepository: UserRepository,
+        roleLookup: RoleLookup,
         tokenBlacklist: RedisTokenBlacklist,
         clock: SystemClock,
       ) =>
@@ -185,6 +184,7 @@ import { UserEntity } from './typeorm/user.entity';
           tokenService,
           clientRepository,
           userRepository,
+          roleLookup,
           tokenBlacklist,
           clock,
         ),
@@ -193,6 +193,7 @@ import { UserEntity } from './typeorm/user.entity';
         TOKEN_SERVICE,
         OAUTH_CLIENT_REPOSITORY,
         USER_REPOSITORY,
+        ROLE_LOOKUP,
         TOKEN_BLACKLIST,
         CLOCK,
       ],
@@ -202,7 +203,7 @@ import { UserEntity } from './typeorm/user.entity';
       useFactory: (
         tokenService: JwtTokenService,
         tokenBlacklist: RedisTokenBlacklist,
-        userRepository: TypeOrmUserRepository,
+        userRepository: UserRepository,
       ) => new GetUserInfoUseCase(tokenService, tokenBlacklist, userRepository),
       inject: [TOKEN_SERVICE, TOKEN_BLACKLIST, USER_REPOSITORY],
     },

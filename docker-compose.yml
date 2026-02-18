@@ -51,6 +51,9 @@ services:
       DATABASE_URL: postgresql://toka:toka_password@postgres:5432/toka
       RABBITMQ_URL: amqp://toka:toka_password@rabbitmq:5672
       RABBITMQ_EXCHANGE: toka.events
+      USER_SERVICE_URL: http://user:3002/internal/users
+      ROLE_SERVICE_URL: http://role:3003/internal/roles
+      INTERNAL_SERVICE_TOKEN: toka-internal
     networks:
       - toka
     depends_on:
@@ -72,6 +75,8 @@ services:
       AUTH_JWKS_URI: http://kong:8000/auth/.well-known/jwks.json
       RABBITMQ_URL: amqp://toka:toka_password@rabbitmq:5672
       RABBITMQ_EXCHANGE: toka.events
+      ROLE_SERVICE_URL: http://role:3003/roles
+      INTERNAL_SERVICE_TOKEN: toka-internal
     networks:
       - toka
     depends_on:
@@ -91,6 +96,7 @@ services:
       AUTH_JWKS_URI: http://kong:8000/auth/.well-known/jwks.json
       RABBITMQ_URL: amqp://toka:toka_password@rabbitmq:5672
       RABBITMQ_EXCHANGE: toka.events
+      INTERNAL_SERVICE_TOKEN: toka-internal
     networks:
       - toka
     depends_on:

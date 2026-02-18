@@ -18,5 +18,5 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   @MinLength(2)
-  role?: string;
+  roleId?: string;
 }

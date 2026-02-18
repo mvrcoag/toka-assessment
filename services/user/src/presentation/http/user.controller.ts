@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Headers,
   Param,
   Patch,
   Post,
@@ -43,8 +44,14 @@ export class UserController {
   }
 
   @Post()
-  async create(@Body() body: CreateUserDto): Promise<UserResponseDto> {
-    const user = await this.createUser.execute(body);
+  async create(
+    @Body() body: CreateUserDto,
+    @Headers('authorization') authorization?: string,
+  ): Promise<UserResponseDto> {
+    const user = await this.createUser.execute({
+      ...body,
+      accessToken: authorization,
+    });
     return this.toResponse(user);
   }
 
@@ -52,8 +59,13 @@ export class UserController {
   async update(
     @Param('id') id: string,
     @Body() body: UpdateUserDto,
+    @Headers('authorization') authorization?: string,
   ): Promise<UserResponseDto> {
-    const user = await this.updateUser.execute({ id, ...body });
+    const user = await this.updateUser.execute({
+      id,
+      ...body,
+      accessToken: authorization,
+    });
     return this.toResponse(user);
   }
 
@@ -67,7 +79,7 @@ export class UserController {
       id: user.id.value,
       name: user.name.value,
       email: user.email.value,
-      role: user.role.value,
+      roleId: user.roleId.value,
     };
   }
 }

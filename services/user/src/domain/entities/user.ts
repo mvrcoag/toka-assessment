@@ -4,7 +4,7 @@ import { UserDeletedEvent } from '../events/user-deleted.event';
 import { UserUpdatedEvent } from '../events/user-updated.event';
 import { Email } from '../value-objects/email';
 import { PasswordHash } from '../value-objects/password-hash';
-import { Role } from '../value-objects/role';
+import { RoleId } from '../value-objects/role-id';
 import { UserId } from '../value-objects/user-id';
 import { UserName } from '../value-objects/user-name';
 
@@ -13,7 +13,7 @@ export interface UserProps {
   name: UserName;
   email: Email;
   passwordHash: PasswordHash;
-  role: Role;
+  roleId: RoleId;
 }
 
 export class User {
@@ -50,8 +50,8 @@ export class User {
     return this.props.passwordHash;
   }
 
-  get role(): Role {
-    return this.props.role;
+  get roleId(): RoleId {
+    return this.props.roleId;
   }
 
   rename(name: UserName): void {
@@ -69,8 +69,8 @@ export class User {
     this.domainEvents.push(new UserUpdatedEvent(this.id.value, this.email.value));
   }
 
-  changeRole(role: Role): void {
-    this.props.role = role;
+  changeRole(roleId: RoleId): void {
+    this.props.roleId = roleId;
     this.domainEvents.push(new UserUpdatedEvent(this.id.value, this.email.value));
   }
 

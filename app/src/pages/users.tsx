@@ -22,7 +22,7 @@ import type { User } from '@/services/users.service'
 const userSchema = z.object({
   name: z.string().min(2, 'Name is required'),
   email: z.string().email('Valid email required'),
-  role: z.string().min(1, 'Role is required'),
+  roleId: z.string().min(1, 'Role is required'),
   password: z.string().min(6, 'Password must be at least 6 characters').optional().or(z.literal('')),
 })
 
@@ -31,7 +31,7 @@ type UserFormValues = z.infer<typeof userSchema>
 const defaultValues: UserFormValues = {
   name: '',
   email: '',
-  role: '',
+  roleId: '',
   password: '',
 }
 
@@ -55,7 +55,7 @@ export function UsersPage() {
 
   const openEdit = (user: User) => {
     setEditingUser(user)
-    form.reset({ name: user.name, email: user.email, role: user.role, password: '' })
+    form.reset({ name: user.name, email: user.email, roleId: user.roleId, password: '' })
     setDialogOpen(true)
   }
 
@@ -68,7 +68,7 @@ export function UsersPage() {
     const payload = {
       name: values.name,
       email: values.email,
-      role: values.role,
+      roleId: values.roleId,
       ...(values.password ? { password: values.password } : {}),
     }
 
@@ -121,7 +121,9 @@ export function UsersPage() {
               <TableRow key={user.id}>
                 <TableCell className="font-medium">{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>{user.role}</TableCell>
+                <TableCell>
+                  {roles.find((role) => role.id === user.roleId)?.name ?? user.roleId}
+                </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
                     <Button variant="outline" size="sm" onClick={() => openEdit(user)}>
@@ -168,27 +170,27 @@ export function UsersPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
+              <Label htmlFor="roleId">Role</Label>
               <Controller
-                name="role"
+                name="roleId"
                 control={form.control}
                 render={({ field }) => (
                   <select
-                    id="role"
+                    id="roleId"
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     {...field}
                   >
                     <option value="">Select a role</option>
                     {roles.map((role) => (
-                      <option key={role.id} value={role.name}>
+                      <option key={role.id} value={role.id}>
                         {role.name}
                       </option>
                     ))}
                   </select>
                 )}
               />
-              {form.formState.errors.role ? (
-                <p className="text-xs text-destructive">{form.formState.errors.role.message}</p>
+              {form.formState.errors.roleId ? (
+                <p className="text-xs text-destructive">{form.formState.errors.roleId.message}</p>
               ) : null}
             </div>
             <Separator />
