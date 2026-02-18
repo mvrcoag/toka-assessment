@@ -1,0 +1,10 @@
+export const USER_REPOSITORY = Symbol('USER_REPOSITORY');
+export const PASSWORD_HASHER = Symbol('PASSWORD_HASHER');
+export const OAUTH_CLIENT_REPOSITORY = Symbol('OAUTH_CLIENT_REPOSITORY');
+export const AUTH_CODE_REPOSITORY = Symbol('AUTH_CODE_REPOSITORY');
+export const REFRESH_TOKEN_REPOSITORY = Symbol('REFRESH_TOKEN_REPOSITORY');
+export const TOKEN_SERVICE = Symbol('TOKEN_SERVICE');
+export const TOKEN_BLACKLIST = Symbol('TOKEN_BLACKLIST');
+export const CLOCK = Symbol('CLOCK');
+export const AUTH_SETTINGS = Symbol('AUTH_SETTINGS');
+export const AUTH_CODE_GENERATOR = Symbol('AUTH_CODE_GENERATOR');
