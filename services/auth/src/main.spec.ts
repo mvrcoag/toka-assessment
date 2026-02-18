@@ -2,6 +2,7 @@ describe('main bootstrap', () => {
   it('creates nest app and listens', async () => {
     const use = jest.fn();
     const useGlobalPipes = jest.fn();
+    const useGlobalFilters = jest.fn();
     const listen = jest.fn().mockResolvedValue(undefined);
 
     jest.resetModules();
@@ -12,6 +13,7 @@ describe('main bootstrap', () => {
     jest.spyOn(core.NestFactory, 'create').mockResolvedValue({
       use,
       useGlobalPipes,
+      useGlobalFilters,
       listen,
     });
 
@@ -21,6 +23,7 @@ describe('main bootstrap', () => {
     expect(core.NestFactory.create).toHaveBeenCalled();
     expect(use).toHaveBeenCalled();
     expect(useGlobalPipes).toHaveBeenCalled();
+    expect(useGlobalFilters).toHaveBeenCalled();
     expect(listen).toHaveBeenCalled();
   });
 });

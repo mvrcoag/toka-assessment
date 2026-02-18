@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, HttpException, Post, Query, Res } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Post, Query, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import { DomainError } from '../../domain/errors/domain-error';
 import { AuthorizationRequest } from '../../domain/auth/authorization-request';
@@ -93,48 +93,40 @@ export class AuthController {
 
   @Post('oauth/token')
   async token(@Body() body: TokenRequestDto): Promise<Record<string, unknown>> {
-    try {
-      const grantType = body.grant_type;
+    const grantType = body.grant_type;
 
-      if (grantType === 'authorization_code') {
-        const tokens = await this.exchangeAuthorizationCode.execute({
-          code: body.code ?? '',
-          clientId: body.client_id,
-          clientSecret: body.client_secret,
-          redirectUri: body.redirect_uri ?? '',
-        });
+    if (grantType === 'authorization_code') {
+      const tokens = await this.exchangeAuthorizationCode.execute({
+        code: body.code ?? '',
+        clientId: body.client_id,
+        clientSecret: body.client_secret,
+        redirectUri: body.redirect_uri ?? '',
+      });
 
-        return this.mapTokenResponse(tokens);
-      }
-
-      if (grantType === 'refresh_token') {
-        const tokens = await this.refreshToken.execute({
-          refreshToken: body.refresh_token ?? '',
-          clientId: body.client_id,
-          clientSecret: body.client_secret,
-        });
-
-        return this.mapTokenResponse(tokens);
-      }
-
-      throw new ApplicationError('Unsupported grant_type', 400);
-    } catch (error) {
-      this.handleApiError(error);
+      return this.mapTokenResponse(tokens);
     }
+
+    if (grantType === 'refresh_token') {
+      const tokens = await this.refreshToken.execute({
+        refreshToken: body.refresh_token ?? '',
+        clientId: body.client_id,
+        clientSecret: body.client_secret,
+      });
+
+      return this.mapTokenResponse(tokens);
+    }
+
+    throw new ApplicationError('Unsupported grant_type', 400);
   }
 
   @Get('oauth/userinfo')
   async userInfo(@Headers('authorization') authorization?: string) {
-    try {
-      if (!authorization) {
-        throw new ApplicationError('Missing Authorization header', 401);
-      }
-
-      const token = this.extractBearerToken(authorization);
-      return await this.getUserInfo.execute(token);
-    } catch (error) {
-      this.handleApiError(error);
+    if (!authorization) {
+      throw new ApplicationError('Missing Authorization header', 401);
     }
+
+    const token = this.extractBearerToken(authorization);
+    return this.getUserInfo.execute(token);
   }
 
   private mapTokenResponse(tokens: AuthTokensDto): Record<string, unknown> {
@@ -185,18 +177,6 @@ export class AuthController {
     }
 
     res.status(statusCode).json({ error: errorMessage });
-  }
-
-  private handleApiError(error: unknown): never {
-    if (error instanceof ApplicationError) {
-      throw new HttpException({ error: error.message }, error.statusCode);
-    }
-
-    if (error instanceof DomainError) {
-      throw new HttpException({ error: error.message }, 400);
-    }
-
-    throw new HttpException({ error: 'Internal server error' }, 500);
   }
 
   private readOptionalString(value: unknown): string | undefined {

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import {
   AUTH_CODE_GENERATOR,
   AUTH_CODE_REPOSITORY,
@@ -22,23 +23,35 @@ import { AuthController } from '../presentation/http/auth.controller';
 import { WellKnownController } from '../presentation/http/well-known.controller';
 import { SystemClock } from './clock/system-clock';
 import { AuthConfig } from './config/auth.config';
-import { PostgresUserRepository } from './persistence/postgres-user.repository';
 import { RedisAuthCodeRepository } from './persistence/redis-auth-code.repository';
 import { RedisRefreshTokenRepository } from './persistence/redis-refresh-token.repository';
 import { RedisTokenBlacklist } from './persistence/redis-token-blacklist';
 import { StaticOAuthClientRepository } from './persistence/static-client.repository';
-import { PostgresClient } from './postgres/postgres.client';
 import { RedisClient } from './redis/redis.client';
 import { BcryptPasswordHasher } from './security/bcrypt-password-hasher';
 import { JwtTokenService } from './security/jwt-token.service';
 import { RandomAuthCodeGenerator } from './security/random-auth-code.generator';
+import { TypeOrmUserRepository } from './typeorm/typeorm-user.repository';
+import { UserEntity } from './typeorm/user.entity';
 
 @Module({
+  imports: [
+    TypeOrmModule.forRootAsync({
+      inject: [AuthConfig],
+      useFactory: (config: AuthConfig) => ({
+        type: 'postgres',
+        url: config.postgresUrl,
+        entities: [UserEntity],
+        synchronize: false,
+      }),
+    }),
+    TypeOrmModule.forFeature([UserEntity]),
+  ],
   controllers: [AuthController, WellKnownController],
   providers: [
     AuthConfig,
     RedisClient,
-    PostgresClient,
+    TypeOrmUserRepository,
     {
       provide: AUTH_SETTINGS,
       useExisting: AuthConfig,
@@ -57,8 +70,7 @@ import { RandomAuthCodeGenerator } from './security/random-auth-code.generator';
     },
     {
       provide: USER_REPOSITORY,
-      useFactory: (postgres: PostgresClient) => new PostgresUserRepository(postgres),
-      inject: [PostgresClient],
+      useExisting: TypeOrmUserRepository,
     },
     {
       provide: OAUTH_CLIENT_REPOSITORY,
@@ -95,7 +107,7 @@ import { RandomAuthCodeGenerator } from './security/random-auth-code.generator';
     {
       provide: LoginAndIssueCodeUseCase,
       useFactory: (
-        userRepository: PostgresUserRepository,
+        userRepository: TypeOrmUserRepository,
         hasher: BcryptPasswordHasher,
         authCodeRepository: RedisAuthCodeRepository,
         authCodeGenerator: RandomAuthCodeGenerator,
@@ -124,7 +136,7 @@ import { RandomAuthCodeGenerator } from './security/random-auth-code.generator';
       useFactory: (
         authCodeRepository: RedisAuthCodeRepository,
         refreshTokenRepository: RedisRefreshTokenRepository,
-        userRepository: PostgresUserRepository,
+        userRepository: TypeOrmUserRepository,
         tokenService: JwtTokenService,
         clientRepository: StaticOAuthClientRepository,
         clock: SystemClock,
@@ -152,7 +164,7 @@ import { RandomAuthCodeGenerator } from './security/random-auth-code.generator';
         refreshTokenRepository: RedisRefreshTokenRepository,
         tokenService: JwtTokenService,
         clientRepository: StaticOAuthClientRepository,
-        userRepository: PostgresUserRepository,
+        userRepository: TypeOrmUserRepository,
         tokenBlacklist: RedisTokenBlacklist,
         clock: SystemClock,
       ) =>
@@ -178,7 +190,7 @@ import { RandomAuthCodeGenerator } from './security/random-auth-code.generator';
       useFactory: (
         tokenService: JwtTokenService,
         tokenBlacklist: RedisTokenBlacklist,
-        userRepository: PostgresUserRepository,
+        userRepository: TypeOrmUserRepository,
       ) => new GetUserInfoUseCase(tokenService, tokenBlacklist, userRepository),
       inject: [TOKEN_SERVICE, TOKEN_BLACKLIST, USER_REPOSITORY],
     },

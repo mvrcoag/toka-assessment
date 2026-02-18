@@ -17,14 +17,13 @@ import { AuthConfig } from './config/auth.config';
 import { SystemClock } from './clock/system-clock';
 import { RandomAuthCodeGenerator } from './security/random-auth-code.generator';
 import { BcryptPasswordHasher } from './security/bcrypt-password-hasher';
-import { PostgresUserRepository } from './persistence/postgres-user.repository';
 import { RedisAuthCodeRepository } from './persistence/redis-auth-code.repository';
 import { RedisRefreshTokenRepository } from './persistence/redis-refresh-token.repository';
 import { RedisTokenBlacklist } from './persistence/redis-token-blacklist';
 import { StaticOAuthClientRepository } from './persistence/static-client.repository';
 import { JwtTokenService } from './security/jwt-token.service';
 import { RedisClient } from './redis/redis.client';
-import { PostgresClient } from './postgres/postgres.client';
+import { TypeOrmUserRepository } from './typeorm/typeorm-user.repository';
 import { ValidateAuthorizationRequestUseCase } from '../application/use-cases/validate-authorization-request.use-case';
 import { LoginAndIssueCodeUseCase } from '../application/use-cases/login-and-issue-code.use-case';
 import { ExchangeAuthorizationCodeUseCase } from '../application/use-cases/exchange-authorization-code.use-case';
@@ -42,7 +41,6 @@ describe('AuthModule providers', () => {
     const clock = new SystemClock();
     const authCodeGenerator = new RandomAuthCodeGenerator();
     const passwordHasher = new BcryptPasswordHasher(4);
-    const postgres = { getPool: () => ({ query: jest.fn() }) } as unknown as PostgresClient;
     const redis = {
       getClient: () => ({
         set: jest.fn(),
@@ -52,14 +50,18 @@ describe('AuthModule providers', () => {
       }),
     } as unknown as RedisClient;
 
-    const userRepo = await byToken(USER_REPOSITORY).useFactory(postgres);
+    const userRepo = {
+      findByEmail: jest.fn(),
+      findById: jest.fn(),
+      save: jest.fn(),
+    } as unknown as TypeOrmUserRepository;
     const clientRepo = byToken(OAUTH_CLIENT_REPOSITORY).useFactory(config);
     const authCodeRepo = byToken(AUTH_CODE_REPOSITORY).useFactory(redis);
     const refreshTokenRepo = byToken(REFRESH_TOKEN_REPOSITORY).useFactory(redis);
     const blacklist = byToken(TOKEN_BLACKLIST).useFactory(redis);
     const tokenService = byToken(TOKEN_SERVICE).useFactory(config, clock, config);
 
-    expect(userRepo).toBeInstanceOf(PostgresUserRepository);
+    expect(byToken(USER_REPOSITORY).useExisting).toBe(TypeOrmUserRepository);
     expect(clientRepo).toBeInstanceOf(StaticOAuthClientRepository);
     expect(authCodeRepo).toBeInstanceOf(RedisAuthCodeRepository);
     expect(refreshTokenRepo).toBeInstanceOf(RedisRefreshTokenRepository);
