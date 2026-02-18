@@ -31,12 +31,14 @@ class ChromaVectorStore(VectorStore):
         result = self.collection.query(
             query_embeddings=[embedding],
             n_results=top_k,
-            include=["documents", "metadatas", "distances", "ids"],
+            include=["documents", "metadatas", "distances"],
         )
         documents = result.get("documents", [[]])[0]
         metadatas = result.get("metadatas", [[]])[0]
         distances = result.get("distances", [[]])[0]
         ids = result.get("ids", [[]])[0]
+        if not ids:
+            ids = [f"doc-{index}" for index, _ in enumerate(documents)]
         items: list[RetrievedDocument] = []
         for index, doc in enumerate(documents):
             items.append(

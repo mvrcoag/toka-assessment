@@ -29,7 +29,9 @@ class QueryAgentUseCase:
         )
         system_prompt = (
             "You are a helpful operations assistant. Answer using only the provided context. "
-            "If the answer is not in the context, say you do not have enough data."
+            "If the answer is not in the context, say you do not have enough data. "
+            "If the question is about audit logs, say whether any audit data appears in context. "
+            "Suggest running ingestion to refresh the knowledge base when data is missing."
         )
         user_prompt = f"Question: {question}\n\nContext:\n{context}"
         answer = self.chat.generate(system_prompt, user_prompt)

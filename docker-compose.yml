@@ -11,7 +11,7 @@ services:
       KONG_PROXY_LISTEN: 0.0.0.0:8000
       KONG_ADMIN_LISTEN: 0.0.0.0:8001
     ports:
-      - "8000:8000"
+      - "${KONG_PROXY_PORT:-8000}:8000"
     volumes:
       - ./kong/kong.yml:/kong/declarative/kong.yml:ro
     networks:
@@ -27,7 +27,7 @@ services:
     build:
       context: ./app
     ports:
-      - "3000:80"
+      - "${FRONTEND_PORT:-3000}:80"
     depends_on:
       - kong
     networks:
@@ -37,23 +37,26 @@ services:
     build:
       context: ./services/auth
     environment:
-      PORT: 3001
-      NODE_ENV: production
-      ISSUER: http://localhost:8000/auth
-      OAUTH_CLIENT_ID: toka-client
-      OAUTH_CLIENT_SECRET: toka-secret
-      OAUTH_REDIRECT_URIS: http://localhost:3000/callback
-      AUTH_SCOPES: openid profile email
-      ACCESS_TOKEN_TTL_SECONDS: 900
-      REFRESH_TOKEN_TTL_SECONDS: 86400
-      AUTH_CODE_TTL_SECONDS: 600
-      REDIS_URL: redis://redis:6379
-      DATABASE_URL: postgresql://toka:toka_password@postgres:5432/toka
-      RABBITMQ_URL: amqp://toka:toka_password@rabbitmq:5672
-      RABBITMQ_EXCHANGE: toka.events
-      USER_SERVICE_URL: http://user:3002/internal/users
-      ROLE_SERVICE_URL: http://role:3003/internal/roles
-      INTERNAL_SERVICE_TOKEN: toka-internal
+      PORT: ${AUTH_PORT:-3001}
+      NODE_ENV: ${NODE_ENV:-production}
+      ISSUER: ${AUTH_ISSUER:-http://localhost:8000/auth}
+      OAUTH_CLIENT_ID: ${OAUTH_CLIENT_ID:-toka-client}
+      OAUTH_CLIENT_SECRET: ${OAUTH_CLIENT_SECRET:-toka-secret}
+      OAUTH_REDIRECT_URIS: ${OAUTH_REDIRECT_URIS:-http://localhost:3000/callback}
+      AUTH_SCOPES: ${AUTH_SCOPES:-openid profile email}
+      ACCESS_TOKEN_TTL_SECONDS: ${ACCESS_TOKEN_TTL_SECONDS:-900}
+      REFRESH_TOKEN_TTL_SECONDS: ${REFRESH_TOKEN_TTL_SECONDS:-86400}
+      AUTH_CODE_TTL_SECONDS: ${AUTH_CODE_TTL_SECONDS:-600}
+      JWT_KID: ${JWT_KID:-toka-key-1}
+      JWT_PRIVATE_KEY: ${JWT_PRIVATE_KEY}
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://toka:toka_password@postgres:5432/toka}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://toka:toka_password@rabbitmq:5672}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE:-toka.events}
+      USER_SERVICE_URL: ${USER_SERVICE_URL:-http://user:3002/internal/users}
+      ROLE_SERVICE_URL: ${ROLE_SERVICE_INTERNAL_URL:-http://role:3003/internal/roles}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-toka-internal}
     networks:
       - toka
     depends_on:
@@ -68,15 +71,15 @@ services:
     build:
       context: ./services/user
     environment:
-      PORT: 3002
-      NODE_ENV: production
-      DATABASE_URL: postgresql://toka:toka_password@postgres:5432/toka
-      AUTH_ISSUER: http://localhost:8000/auth
-      AUTH_JWKS_URI: http://kong:8000/auth/.well-known/jwks.json
-      RABBITMQ_URL: amqp://toka:toka_password@rabbitmq:5672
-      RABBITMQ_EXCHANGE: toka.events
-      ROLE_SERVICE_URL: http://role:3003/roles
-      INTERNAL_SERVICE_TOKEN: toka-internal
+      PORT: ${USER_PORT:-3002}
+      NODE_ENV: ${NODE_ENV:-production}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://toka:toka_password@postgres:5432/toka}
+      AUTH_ISSUER: ${AUTH_ISSUER:-http://localhost:8000/auth}
+      AUTH_JWKS_URI: ${AUTH_JWKS_URI:-http://kong:8000/auth/.well-known/jwks.json}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://toka:toka_password@rabbitmq:5672}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE:-toka.events}
+      ROLE_SERVICE_URL: ${ROLE_SERVICE_URL:-http://role:3003/roles}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-toka-internal}
     networks:
       - toka
     depends_on:
@@ -89,14 +92,14 @@ services:
     build:
       context: ./services/role
     environment:
-      PORT: 3003
-      NODE_ENV: production
-      DATABASE_URL: postgresql://toka:toka_password@postgres:5432/toka
-      AUTH_ISSUER: http://localhost:8000/auth
-      AUTH_JWKS_URI: http://kong:8000/auth/.well-known/jwks.json
-      RABBITMQ_URL: amqp://toka:toka_password@rabbitmq:5672
-      RABBITMQ_EXCHANGE: toka.events
-      INTERNAL_SERVICE_TOKEN: toka-internal
+      PORT: ${ROLE_PORT:-3003}
+      NODE_ENV: ${NODE_ENV:-production}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://toka:toka_password@postgres:5432/toka}
+      AUTH_ISSUER: ${AUTH_ISSUER:-http://localhost:8000/auth}
+      AUTH_JWKS_URI: ${AUTH_JWKS_URI:-http://kong:8000/auth/.well-known/jwks.json}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://toka:toka_password@rabbitmq:5672}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE:-toka.events}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:-toka-internal}
     networks:
       - toka
     depends_on:
@@ -109,14 +112,14 @@ services:
     build:
       context: ./services/audit
     environment:
-      PORT: 3004
-      NODE_ENV: production
-      MONGODB_URI: mongodb://toka:toka_password@mongodb:27017/audit?authSource=admin
-      AUTH_ISSUER: http://localhost:8000/auth
-      AUTH_JWKS_URI: http://kong:8000/auth/.well-known/jwks.json
-      RABBITMQ_URL: amqp://toka:toka_password@rabbitmq:5672
-      RABBITMQ_EXCHANGE: toka.events
-      RABBITMQ_QUEUE: audit.logs
+      PORT: ${AUDIT_PORT:-3004}
+      NODE_ENV: ${NODE_ENV:-production}
+      MONGODB_URI: ${MONGODB_URI:-mongodb://toka:toka_password@mongodb:27017/audit?authSource=admin}
+      AUTH_ISSUER: ${AUTH_ISSUER:-http://localhost:8000/auth}
+      AUTH_JWKS_URI: ${AUTH_JWKS_URI:-http://kong:8000/auth/.well-known/jwks.json}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://toka:toka_password@rabbitmq:5672}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE:-toka.events}
+      RABBITMQ_QUEUE: ${RABBITMQ_QUEUE:-audit.logs}
     networks:
       - toka
     depends_on:
@@ -129,16 +132,29 @@ services:
     build:
       context: ./services/ai
     environment:
-      PORT: 3005
+      PORT: ${AI_PORT:-3005}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_CHAT_MODEL: ${OPENAI_CHAT_MODEL:-gpt-4o-mini}
+      OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:-text-embedding-3-small}
+      CHROMA_URL: ${CHROMA_URL:-http://chromadb:8000}
+      CHROMA_COLLECTION: ${CHROMA_COLLECTION:-toka-knowledge}
+      CHROMA_CURSOR_COLLECTION: ${CHROMA_CURSOR_COLLECTION:-toka-cursors}
+      AUTH_JWKS_URL: ${AUTH_JWKS_URI:-http://kong:8000/auth/.well-known/jwks.json}
+      AUTH_ISSUER: ${AUTH_ISSUER:-http://localhost:8000/auth}
+      USER_SERVICE_URL: ${AI_USER_SERVICE_URL:-http://user:3002/users}
+      ROLE_SERVICE_URL: ${AI_ROLE_SERVICE_URL:-http://role:3003/roles}
+      AUDIT_SERVICE_URL: ${AI_AUDIT_SERVICE_URL:-http://audit:3004/logs}
+      REQUEST_TIMEOUT_SECONDS: ${AI_REQUEST_TIMEOUT_SECONDS:-10}
+      EMBEDDING_BATCH_SIZE: ${AI_EMBEDDING_BATCH_SIZE:-128}
     networks:
       - toka
 
   postgres:
     image: postgres:16
     environment:
-      POSTGRES_USER: toka
-      POSTGRES_PASSWORD: toka_password
-      POSTGRES_DB: toka
+      POSTGRES_USER: ${POSTGRES_USER:-toka}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-toka_password}
+      POSTGRES_DB: ${POSTGRES_DB:-toka}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres/init:/docker-entrypoint-initdb.d:ro
@@ -153,8 +169,8 @@ services:
   mongodb:
     image: mongo:7.0
     environment:
-      MONGO_INITDB_ROOT_USERNAME: toka
-      MONGO_INITDB_ROOT_PASSWORD: toka_password
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-toka}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-toka_password}
     volumes:
       - mongodb_data:/data/db
       - ./mongodb/init:/docker-entrypoint-initdb.d:ro
@@ -171,8 +187,8 @@ services:
   rabbitmq:
     image: rabbitmq:3.13-management
     environment:
-      RABBITMQ_DEFAULT_USER: toka
-      RABBITMQ_DEFAULT_PASS: toka_password
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-toka}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-toka_password}
     ports:
       - "5672:5672"
       - "15672:15672"

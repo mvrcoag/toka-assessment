@@ -77,7 +77,7 @@ export class AuthConfig implements AuthSettings {
       process.env.INTERNAL_SERVICE_TOKEN ?? 'toka-internal';
 
     this.jwtKeyId = process.env.JWT_KID ?? 'toka-key-1';
-    this.jwtPrivateKey = process.env.JWT_PRIVATE_KEY;
-    this.jwtPublicKey = process.env.JWT_PUBLIC_KEY;
+    this.jwtPrivateKey = process.env.JWT_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    this.jwtPublicKey = process.env.JWT_PUBLIC_KEY?.replace(/\\n/g, '\n');
   }
 }
