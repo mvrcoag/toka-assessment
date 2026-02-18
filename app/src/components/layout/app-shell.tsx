@@ -2,6 +2,7 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { AiChatWidget } from '@/components/ai/ai-chat-widget'
 import { useAuth } from '@/hooks/use-auth'
 import { useRoleOptions } from '@/hooks/use-role-options'
 import {
@@ -104,6 +105,7 @@ export function AppShell() {
           </section>
         </main>
       </div>
+      <AiChatWidget />
     </div>
   )
 }
