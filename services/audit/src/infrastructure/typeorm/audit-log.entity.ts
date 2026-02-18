@@ -21,6 +21,6 @@ export class AuditLogEntity {
   @Column({ nullable: true })
   metadata?: Record<string, unknown>;
 
-  @Column({ name: 'occurred_at' })
+  @Column()
   occurredAt!: Date;
 }

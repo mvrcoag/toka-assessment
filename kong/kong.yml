@@ -1,5 +1,21 @@
 _format_version: "3.0"
 
+plugins:
+  - name: cors
+    config:
+      origins:
+        - http://localhost:3000
+      methods:
+        - GET
+        - POST
+        - PATCH
+        - DELETE
+        - OPTIONS
+      headers:
+        - Authorization
+        - Content-Type
+      max_age: 3600
+
 services:
   - name: auth-service
     url: http://auth:3001

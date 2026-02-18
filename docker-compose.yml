@@ -23,6 +23,16 @@ services:
       - audit
       - ai
 
+  frontend:
+    build:
+      context: ./app
+    ports:
+      - "3000:80"
+    depends_on:
+      - kong
+    networks:
+      - toka
+
   auth:
     build:
       context: ./services/auth

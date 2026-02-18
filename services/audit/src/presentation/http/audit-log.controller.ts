@@ -35,6 +35,8 @@ export class AuditLogController {
   }
 
   private toResponse(log: AuditLog): AuditLogResponseDto {
+    const occurredAt = log.occurredAt instanceof Date ? log.occurredAt : new Date(log.occurredAt as unknown as string);
+    const occurredAtIso = Number.isNaN(occurredAt.getTime()) ? '' : occurredAt.toISOString();
     return {
       id: log.id?.value ?? '',
       action: log.action.value,
@@ -42,7 +44,7 @@ export class AuditLogController {
       actorId: log.actorId,
       actorRole: log.actorRole,
       metadata: log.metadata,
-      occurredAt: log.occurredAt.toISOString(),
+      occurredAt: occurredAtIso,
     };
   }
 

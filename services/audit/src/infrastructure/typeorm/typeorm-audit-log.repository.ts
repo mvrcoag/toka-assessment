@@ -68,6 +68,7 @@ export class TypeOrmAuditLogRepository implements AuditLogRepository {
   }
 
   private toDomain(entity: AuditLogEntity): AuditLog {
+    const occurredAt = entity.occurredAt ? new Date(entity.occurredAt) : new Date(Number.NaN);
     return AuditLog.rehydrate({
       id: AuditLogId.create(entity._id.toHexString()),
       action: AuditAction.create(entity.action),
@@ -75,7 +76,7 @@ export class TypeOrmAuditLogRepository implements AuditLogRepository {
       actorId: entity.actorId,
       actorRole: entity.actorRole,
       metadata: entity.metadata,
-      occurredAt: entity.occurredAt,
+      occurredAt,
     });
   }
 
