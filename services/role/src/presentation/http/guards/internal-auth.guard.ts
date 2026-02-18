@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import type { Request } from 'express';
-import { RoleConfig } from '../../infrastructure/config/role.config';
+import { RoleConfig } from '../../../infrastructure/config/role.config';
 
 @Injectable()
 export class InternalAuthGuard implements CanActivate {

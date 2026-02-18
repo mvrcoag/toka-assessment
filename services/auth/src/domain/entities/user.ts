@@ -26,6 +26,10 @@ export class User {
     return new User(props);
   }
 
+  static rehydrate(props: UserProps): User {
+    return new User(props);
+  }
+
   get id(): UserId {
     return this.props.id;
   }

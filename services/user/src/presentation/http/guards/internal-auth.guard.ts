@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import type { Request } from 'express';
-import { UserConfig } from '../../infrastructure/config/user.config';
+import { UserConfig } from '../../../infrastructure/config/user.config';
 
 @Injectable()
 export class InternalAuthGuard implements CanActivate {
