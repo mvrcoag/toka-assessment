@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import {
   ACCESS_TOKEN_VERIFIER,
+  EVENT_BUS,
   PASSWORD_HASHER,
   USER_REPOSITORY,
 } from '../application/ports/tokens';
@@ -18,6 +19,7 @@ import { UserEntity } from './typeorm/user.entity';
 import { TypeOrmUserRepository } from './typeorm/typeorm-user.repository';
 import { UserRepository } from '../application/ports/user-repository';
 import { PasswordHasher } from '../application/ports/password-hasher';
+import { RabbitMqEventBus } from './rabbitmq/rabbitmq.event-bus';
 
 @Module({
   imports: [
@@ -37,6 +39,11 @@ import { PasswordHasher } from '../application/ports/password-hasher';
     UserConfig,
     TypeOrmUserRepository,
     OidcTokenVerifier,
+    RabbitMqEventBus,
+    {
+      provide: EVENT_BUS,
+      useExisting: RabbitMqEventBus,
+    },
     {
       provide: USER_REPOSITORY,
       useExisting: TypeOrmUserRepository,
@@ -51,20 +58,27 @@ import { PasswordHasher } from '../application/ports/password-hasher';
     },
     {
       provide: CreateUserUseCase,
-      useFactory: (repo: UserRepository, hasher: PasswordHasher) =>
-        new CreateUserUseCase(repo, hasher),
-      inject: [USER_REPOSITORY, PASSWORD_HASHER],
+      useFactory: (
+        repo: UserRepository,
+        hasher: PasswordHasher,
+        eventBus: RabbitMqEventBus,
+      ) => new CreateUserUseCase(repo, hasher, eventBus),
+      inject: [USER_REPOSITORY, PASSWORD_HASHER, EVENT_BUS],
     },
     {
       provide: UpdateUserUseCase,
-      useFactory: (repo: UserRepository, hasher: PasswordHasher) =>
-        new UpdateUserUseCase(repo, hasher),
-      inject: [USER_REPOSITORY, PASSWORD_HASHER],
+      useFactory: (
+        repo: UserRepository,
+        hasher: PasswordHasher,
+        eventBus: RabbitMqEventBus,
+      ) => new UpdateUserUseCase(repo, hasher, eventBus),
+      inject: [USER_REPOSITORY, PASSWORD_HASHER, EVENT_BUS],
     },
     {
       provide: DeleteUserUseCase,
-      useFactory: (repo: UserRepository) => new DeleteUserUseCase(repo),
-      inject: [USER_REPOSITORY],
+      useFactory: (repo: UserRepository, eventBus: RabbitMqEventBus) =>
+        new DeleteUserUseCase(repo, eventBus),
+      inject: [USER_REPOSITORY, EVENT_BUS],
     },
     {
       provide: GetUserUseCase,

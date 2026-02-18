@@ -56,6 +56,7 @@ describe('LoginAndIssueCodeUseCase', () => {
         accessTokenTtlSeconds: 0,
         refreshTokenTtlSeconds: 0,
       },
+      { publish: async () => undefined, publishAll: async () => undefined },
     );
 
     const code = await useCase.execute({
@@ -106,6 +107,7 @@ describe('LoginAndIssueCodeUseCase', () => {
         accessTokenTtlSeconds: 0,
         refreshTokenTtlSeconds: 0,
       },
+      { publish: async () => undefined, publishAll: async () => undefined },
     );
 
     await expect(
@@ -156,6 +158,7 @@ describe('LoginAndIssueCodeUseCase', () => {
         accessTokenTtlSeconds: 0,
         refreshTokenTtlSeconds: 0,
       },
+      { publish: async () => undefined, publishAll: async () => undefined },
     );
 
     await expect(

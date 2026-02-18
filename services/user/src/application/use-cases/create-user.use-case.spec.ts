@@ -20,6 +20,10 @@ describe('CreateUserUseCase', () => {
       {
         hash: async () => PasswordHash.create('hashed'),
       },
+      {
+        publish: async () => undefined,
+        publishAll: async () => undefined,
+      },
     );
 
     const user = await useCase.execute({
@@ -50,6 +54,10 @@ describe('CreateUserUseCase', () => {
       },
       {
         hash: async () => PasswordHash.create('hashed'),
+      },
+      {
+        publish: async () => undefined,
+        publishAll: async () => undefined,
       },
     );
 

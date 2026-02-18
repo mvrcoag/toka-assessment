@@ -3,11 +3,13 @@ import { MODULE_METADATA } from '@nestjs/common/constants';
 import { RoleModule } from './role.module';
 import {
   ACCESS_TOKEN_VERIFIER,
+  EVENT_BUS,
   ROLE_REPOSITORY,
 } from '../application/ports/tokens';
 import { RoleConfig } from './config/role.config';
 import { TypeOrmRoleRepository } from './typeorm/typeorm-role.repository';
 import { OidcTokenVerifier } from './security/oidc-token-verifier';
+import { RabbitMqEventBus } from './rabbitmq/rabbitmq.event-bus';
 import { CreateRoleUseCase } from '../application/use-cases/create-role.use-case';
 import { UpdateRoleUseCase } from '../application/use-cases/update-role.use-case';
 import { DeleteRoleUseCase } from '../application/use-cases/delete-role.use-case';
@@ -21,11 +23,13 @@ describe('RoleModule providers', () => {
 
     expect(byToken(ROLE_REPOSITORY).useExisting).toBe(TypeOrmRoleRepository);
     expect(byToken(ACCESS_TOKEN_VERIFIER).useExisting).toBe(OidcTokenVerifier);
+    expect(byToken(EVENT_BUS).useExisting).toBe(RabbitMqEventBus);
 
     const repo = {} as TypeOrmRoleRepository;
-    const create = byToken(CreateRoleUseCase).useFactory(repo);
-    const update = byToken(UpdateRoleUseCase).useFactory(repo);
-    const del = byToken(DeleteRoleUseCase).useFactory(repo);
+    const eventBus = {} as RabbitMqEventBus;
+    const create = byToken(CreateRoleUseCase).useFactory(repo, eventBus);
+    const update = byToken(UpdateRoleUseCase).useFactory(repo, eventBus);
+    const del = byToken(DeleteRoleUseCase).useFactory(repo, eventBus);
     const get = byToken(GetRoleUseCase).useFactory(repo);
     const list = byToken(ListRolesUseCase).useFactory(repo);
 

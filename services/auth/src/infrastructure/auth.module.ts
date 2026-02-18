@@ -5,6 +5,7 @@ import {
   AUTH_CODE_REPOSITORY,
   AUTH_SETTINGS,
   CLOCK,
+  EVENT_BUS,
   OAUTH_CLIENT_REPOSITORY,
   PASSWORD_HASHER,
   REFRESH_TOKEN_REPOSITORY,
@@ -28,6 +29,7 @@ import { RedisRefreshTokenRepository } from './persistence/redis-refresh-token.r
 import { RedisTokenBlacklist } from './persistence/redis-token-blacklist';
 import { StaticOAuthClientRepository } from './persistence/static-client.repository';
 import { RedisClient } from './redis/redis.client';
+import { RabbitMqEventBus } from './rabbitmq/rabbitmq.event-bus';
 import { BcryptPasswordHasher } from './security/bcrypt-password-hasher';
 import { JwtTokenService } from './security/jwt-token.service';
 import { RandomAuthCodeGenerator } from './security/random-auth-code.generator';
@@ -52,6 +54,11 @@ import { UserEntity } from './typeorm/user.entity';
     AuthConfig,
     RedisClient,
     TypeOrmUserRepository,
+    RabbitMqEventBus,
+    {
+      provide: EVENT_BUS,
+      useExisting: RabbitMqEventBus,
+    },
     {
       provide: AUTH_SETTINGS,
       useExisting: AuthConfig,
@@ -113,6 +120,7 @@ import { UserEntity } from './typeorm/user.entity';
         authCodeGenerator: RandomAuthCodeGenerator,
         clock: SystemClock,
         settings: AuthConfig,
+        eventBus: RabbitMqEventBus,
       ) =>
         new LoginAndIssueCodeUseCase(
           userRepository,
@@ -121,6 +129,7 @@ import { UserEntity } from './typeorm/user.entity';
           authCodeGenerator,
           clock,
           settings,
+          eventBus,
         ),
       inject: [
         USER_REPOSITORY,
@@ -129,6 +138,7 @@ import { UserEntity } from './typeorm/user.entity';
         AUTH_CODE_GENERATOR,
         CLOCK,
         AUTH_SETTINGS,
+        EVENT_BUS,
       ],
     },
     {

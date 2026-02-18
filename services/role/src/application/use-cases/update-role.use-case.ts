@@ -2,6 +2,7 @@ import { RoleAbilities } from '../../domain/value-objects/role-abilities';
 import { RoleId } from '../../domain/value-objects/role-id';
 import { RoleName } from '../../domain/value-objects/role-name';
 import { ApplicationError } from '../errors/application-error';
+import { EventBus } from '../ports/event-bus';
 import { RoleRepository } from '../ports/role-repository';
 
 export interface UpdateRoleInput {
@@ -14,7 +15,10 @@ export interface UpdateRoleInput {
 }
 
 export class UpdateRoleUseCase {
-  constructor(private readonly repository: RoleRepository) {}
+  constructor(
+    private readonly repository: RoleRepository,
+    private readonly eventBus: EventBus,
+  ) {}
 
   async execute(input: UpdateRoleInput) {
     const roleId = RoleId.create(input.id);
@@ -48,6 +52,7 @@ export class UpdateRoleUseCase {
     }
 
     await this.repository.save(role);
+    await this.eventBus.publishAll(role.pullDomainEvents());
     return role;
   }
 }

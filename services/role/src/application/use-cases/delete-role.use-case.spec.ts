@@ -25,7 +25,10 @@ describe('DeleteRoleUseCase', () => {
       save: async () => undefined,
       delete: async () => undefined,
     };
-    const useCase = new DeleteRoleUseCase(repository);
+    const useCase = new DeleteRoleUseCase(repository, {
+      publish: async () => undefined,
+      publishAll: async () => undefined,
+    });
 
     await expect(useCase.execute('role-1')).resolves.toBeUndefined();
   });
@@ -38,7 +41,10 @@ describe('DeleteRoleUseCase', () => {
       save: async () => undefined,
       delete: async () => undefined,
     };
-    const useCase = new DeleteRoleUseCase(repository);
+    const useCase = new DeleteRoleUseCase(repository, {
+      publish: async () => undefined,
+      publishAll: async () => undefined,
+    });
 
     await expect(useCase.execute('missing')).rejects.toBeInstanceOf(ApplicationError);
   });

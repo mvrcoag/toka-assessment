@@ -10,6 +10,7 @@ import { OidcTokenVerifier } from './security/oidc-token-verifier';
 import { AuditLogEntity } from './typeorm/audit-log.entity';
 import { TypeOrmAuditLogRepository } from './typeorm/typeorm-audit-log.repository';
 import { AuditLogRepository } from '../application/ports/audit-log-repository';
+import { AuditEventConsumer } from './rabbitmq/audit-event-consumer';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { AuditLogRepository } from '../application/ports/audit-log-repository';
     AuditConfig,
     TypeOrmAuditLogRepository,
     OidcTokenVerifier,
+    AuditEventConsumer,
     {
       provide: AUDIT_LOG_REPOSITORY,
       useExisting: TypeOrmAuditLogRepository,

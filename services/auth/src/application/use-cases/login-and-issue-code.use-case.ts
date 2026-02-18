@@ -6,6 +6,7 @@ import { AuthCodeGenerator } from '../ports/auth-code-generator';
 import { AuthCodeRepository } from '../ports/auth-code-repository';
 import { AuthSettings } from '../ports/auth-settings';
 import { Clock } from '../ports/clock';
+import { EventBus } from '../ports/event-bus';
 import { PasswordHasher } from '../ports/password-hasher';
 import { UserRepository } from '../ports/user-repository';
 
@@ -23,6 +24,7 @@ export class LoginAndIssueCodeUseCase {
     private readonly authCodeGenerator: AuthCodeGenerator,
     private readonly clock: Clock,
     private readonly settings: AuthSettings,
+    private readonly eventBus: EventBus,
   ) {}
 
   async execute(input: LoginAndIssueCodeInput): Promise<string> {
@@ -63,6 +65,7 @@ export class LoginAndIssueCodeUseCase {
     });
 
     await this.authCodeRepository.save(authCode);
+    await this.eventBus.publishAll(user.pullDomainEvents());
     return code;
   }
 }

@@ -2,6 +2,7 @@ import { Role } from '../../domain/entities/role';
 import { RoleAbilities } from '../../domain/value-objects/role-abilities';
 import { RoleName } from '../../domain/value-objects/role-name';
 import { ApplicationError } from '../errors/application-error';
+import { EventBus } from '../ports/event-bus';
 import { RoleRepository } from '../ports/role-repository';
 
 export interface CreateRoleInput {
@@ -13,7 +14,10 @@ export interface CreateRoleInput {
 }
 
 export class CreateRoleUseCase {
-  constructor(private readonly repository: RoleRepository) {}
+  constructor(
+    private readonly repository: RoleRepository,
+    private readonly eventBus: EventBus,
+  ) {}
 
   async execute(input: CreateRoleInput): Promise<Role> {
     const name = RoleName.create(input.name);
@@ -31,6 +35,7 @@ export class CreateRoleUseCase {
 
     const role = Role.create(name, abilities);
     await this.repository.save(role);
+    await this.eventBus.publishAll(role.pullDomainEvents());
     return role;
   }
 }

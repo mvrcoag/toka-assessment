@@ -3,6 +3,7 @@ import { MODULE_METADATA } from '@nestjs/common/constants';
 import { UserModule } from './user.module';
 import {
   ACCESS_TOKEN_VERIFIER,
+  EVENT_BUS,
   PASSWORD_HASHER,
   USER_REPOSITORY,
 } from '../application/ports/tokens';
@@ -10,6 +11,7 @@ import { UserConfig } from './config/user.config';
 import { BcryptPasswordHasher } from './security/bcrypt-password-hasher';
 import { OidcTokenVerifier } from './security/oidc-token-verifier';
 import { TypeOrmUserRepository } from './typeorm/typeorm-user.repository';
+import { RabbitMqEventBus } from './rabbitmq/rabbitmq.event-bus';
 import { CreateUserUseCase } from '../application/use-cases/create-user.use-case';
 import { UpdateUserUseCase } from '../application/use-cases/update-user.use-case';
 import { DeleteUserUseCase } from '../application/use-cases/delete-user.use-case';
@@ -34,10 +36,20 @@ describe('UserModule providers', () => {
 
     expect(byToken(USER_REPOSITORY).useExisting).toBe(TypeOrmUserRepository);
     expect(byToken(ACCESS_TOKEN_VERIFIER).useExisting).toBe(OidcTokenVerifier);
+    expect(byToken(EVENT_BUS).useExisting).toBe(RabbitMqEventBus);
 
-    const createUser = byToken(CreateUserUseCase).useFactory(userRepo, passwordHasher);
-    const updateUser = byToken(UpdateUserUseCase).useFactory(userRepo, passwordHasher);
-    const deleteUser = byToken(DeleteUserUseCase).useFactory(userRepo);
+    const eventBus = {} as RabbitMqEventBus;
+    const createUser = byToken(CreateUserUseCase).useFactory(
+      userRepo,
+      passwordHasher,
+      eventBus,
+    );
+    const updateUser = byToken(UpdateUserUseCase).useFactory(
+      userRepo,
+      passwordHasher,
+      eventBus,
+    );
+    const deleteUser = byToken(DeleteUserUseCase).useFactory(userRepo, eventBus);
     const getUser = byToken(GetUserUseCase).useFactory(userRepo);
     const listUsers = byToken(ListUsersUseCase).useFactory(userRepo);
 

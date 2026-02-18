@@ -8,3 +8,4 @@ export const TOKEN_BLACKLIST = Symbol('TOKEN_BLACKLIST');
 export const CLOCK = Symbol('CLOCK');
 export const AUTH_SETTINGS = Symbol('AUTH_SETTINGS');
 export const AUTH_CODE_GENERATOR = Symbol('AUTH_CODE_GENERATOR');
+export const EVENT_BUS = Symbol('EVENT_BUS');

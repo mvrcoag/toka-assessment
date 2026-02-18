@@ -39,12 +39,16 @@ services:
       AUTH_CODE_TTL_SECONDS: 600
       REDIS_URL: redis://redis:6379
       DATABASE_URL: postgresql://toka:toka_password@postgres:5432/toka
+      RABBITMQ_URL: amqp://toka:toka_password@rabbitmq:5672
+      RABBITMQ_EXCHANGE: toka.events
     networks:
       - toka
     depends_on:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_started
+      rabbitmq:
         condition: service_started
 
   user:
@@ -56,11 +60,15 @@ services:
       DATABASE_URL: postgresql://toka:toka_password@postgres:5432/toka
       AUTH_ISSUER: http://localhost:8000/auth
       AUTH_JWKS_URI: http://kong:8000/auth/.well-known/jwks.json
+      RABBITMQ_URL: amqp://toka:toka_password@rabbitmq:5672
+      RABBITMQ_EXCHANGE: toka.events
     networks:
       - toka
     depends_on:
       postgres:
         condition: service_healthy
+      rabbitmq:
+        condition: service_started
 
   role:
     build:
@@ -71,11 +79,15 @@ services:
       DATABASE_URL: postgresql://toka:toka_password@postgres:5432/toka
       AUTH_ISSUER: http://localhost:8000/auth
       AUTH_JWKS_URI: http://kong:8000/auth/.well-known/jwks.json
+      RABBITMQ_URL: amqp://toka:toka_password@rabbitmq:5672
+      RABBITMQ_EXCHANGE: toka.events
     networks:
       - toka
     depends_on:
       postgres:
         condition: service_healthy
+      rabbitmq:
+        condition: service_started
 
   audit:
     build:
@@ -86,10 +98,15 @@ services:
       MONGODB_URI: mongodb://toka:toka_password@mongodb:27017/audit?authSource=admin
       AUTH_ISSUER: http://localhost:8000/auth
       AUTH_JWKS_URI: http://kong:8000/auth/.well-known/jwks.json
+      RABBITMQ_URL: amqp://toka:toka_password@rabbitmq:5672
+      RABBITMQ_EXCHANGE: toka.events
+      RABBITMQ_QUEUE: audit.logs
     networks:
       - toka
     depends_on:
       mongodb:
+        condition: service_started
+      rabbitmq:
         condition: service_started
 
   ai:
@@ -131,6 +148,17 @@ services:
     image: redis:7.2-alpine
     volumes:
       - redis_data:/data
+    networks:
+      - toka
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    environment:
+      RABBITMQ_DEFAULT_USER: toka
+      RABBITMQ_DEFAULT_PASS: toka_password
+    ports:
+      - "5672:5672"
+      - "15672:15672"
     networks:
       - toka
 

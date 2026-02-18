@@ -16,25 +16,37 @@ describe('DeleteUserUseCase', () => {
       passwordHash: PasswordHash.create('hash'),
       role: Role.create('user'),
     });
-    const useCase = new DeleteUserUseCase({
-      findById: async () => user,
-      findByEmail: async () => null,
-      list: async () => [],
-      save: async () => undefined,
-      delete: async () => undefined,
-    });
+    const useCase = new DeleteUserUseCase(
+      {
+        findById: async () => user,
+        findByEmail: async () => null,
+        list: async () => [],
+        save: async () => undefined,
+        delete: async () => undefined,
+      },
+      {
+        publish: async () => undefined,
+        publishAll: async () => undefined,
+      },
+    );
 
     await expect(useCase.execute('user-1')).resolves.toBeUndefined();
   });
 
   it('rejects missing user', async () => {
-    const useCase = new DeleteUserUseCase({
-      findById: async () => null,
-      findByEmail: async () => null,
-      list: async () => [],
-      save: async () => undefined,
-      delete: async () => undefined,
-    });
+    const useCase = new DeleteUserUseCase(
+      {
+        findById: async () => null,
+        findByEmail: async () => null,
+        list: async () => [],
+        save: async () => undefined,
+        delete: async () => undefined,
+      },
+      {
+        publish: async () => undefined,
+        publishAll: async () => undefined,
+      },
+    );
 
     await expect(useCase.execute('missing')).rejects.toBeInstanceOf(
       ApplicationError,

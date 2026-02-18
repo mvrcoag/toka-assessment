@@ -6,6 +6,7 @@ import {
   AUTH_CODE_REPOSITORY,
   AUTH_SETTINGS,
   CLOCK,
+  EVENT_BUS,
   OAUTH_CLIENT_REPOSITORY,
   PASSWORD_HASHER,
   REFRESH_TOKEN_REPOSITORY,
@@ -24,6 +25,7 @@ import { StaticOAuthClientRepository } from './persistence/static-client.reposit
 import { JwtTokenService } from './security/jwt-token.service';
 import { RedisClient } from './redis/redis.client';
 import { TypeOrmUserRepository } from './typeorm/typeorm-user.repository';
+import { RabbitMqEventBus } from './rabbitmq/rabbitmq.event-bus';
 import { ValidateAuthorizationRequestUseCase } from '../application/use-cases/validate-authorization-request.use-case';
 import { LoginAndIssueCodeUseCase } from '../application/use-cases/login-and-issue-code.use-case';
 import { ExchangeAuthorizationCodeUseCase } from '../application/use-cases/exchange-authorization-code.use-case';
@@ -60,6 +62,7 @@ describe('AuthModule providers', () => {
     const refreshTokenRepo = byToken(REFRESH_TOKEN_REPOSITORY).useFactory(redis);
     const blacklist = byToken(TOKEN_BLACKLIST).useFactory(redis);
     const tokenService = byToken(TOKEN_SERVICE).useFactory(config, clock, config);
+    expect(byToken(EVENT_BUS).useExisting).toBe(RabbitMqEventBus);
 
     expect(byToken(USER_REPOSITORY).useExisting).toBe(TypeOrmUserRepository);
     expect(clientRepo).toBeInstanceOf(StaticOAuthClientRepository);

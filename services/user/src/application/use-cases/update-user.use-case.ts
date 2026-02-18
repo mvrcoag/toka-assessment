@@ -3,6 +3,7 @@ import { Role } from '../../domain/value-objects/role';
 import { UserId } from '../../domain/value-objects/user-id';
 import { UserName } from '../../domain/value-objects/user-name';
 import { ApplicationError } from '../errors/application-error';
+import { EventBus } from '../ports/event-bus';
 import { PasswordHasher } from '../ports/password-hasher';
 import { UserRepository } from '../ports/user-repository';
 
@@ -18,6 +19,7 @@ export class UpdateUserUseCase {
   constructor(
     private readonly repository: UserRepository,
     private readonly hasher: PasswordHasher,
+    private readonly eventBus: EventBus,
   ) {}
 
   async execute(input: UpdateUserInput) {
@@ -50,6 +52,7 @@ export class UpdateUserUseCase {
     }
 
     await this.repository.save(user);
+    await this.eventBus.publishAll(user.pullDomainEvents());
     return user;
   }
 }

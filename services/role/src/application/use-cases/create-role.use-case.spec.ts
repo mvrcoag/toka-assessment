@@ -14,7 +14,10 @@ describe('CreateRoleUseCase', () => {
       delete: async () => undefined,
     };
 
-    const useCase = new CreateRoleUseCase(repository);
+    const useCase = new CreateRoleUseCase(repository, {
+      publish: async () => undefined,
+      publishAll: async () => undefined,
+    });
     const role = await useCase.execute({
       name: 'Admin',
       canView: true,
@@ -46,7 +49,10 @@ describe('CreateRoleUseCase', () => {
       delete: async () => undefined,
     };
 
-    const useCase = new CreateRoleUseCase(repository);
+    const useCase = new CreateRoleUseCase(repository, {
+      publish: async () => undefined,
+      publishAll: async () => undefined,
+    });
     await expect(
       useCase.execute({
         name: 'Admin',

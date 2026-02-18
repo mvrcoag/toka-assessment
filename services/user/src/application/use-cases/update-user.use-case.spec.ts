@@ -28,6 +28,10 @@ describe('UpdateUserUseCase', () => {
       {
         hash: async () => PasswordHash.create('hash2'),
       },
+      {
+        publish: async () => undefined,
+        publishAll: async () => undefined,
+      },
     );
 
     const updated = await useCase.execute({
@@ -55,6 +59,10 @@ describe('UpdateUserUseCase', () => {
       {
         hash: async () => PasswordHash.create('hash2'),
       },
+      {
+        publish: async () => undefined,
+        publishAll: async () => undefined,
+      },
     );
 
     await expect(useCase.execute({ id: 'missing' })).rejects.toBeInstanceOf(
@@ -80,6 +88,10 @@ describe('UpdateUserUseCase', () => {
       },
       {
         hash: async () => PasswordHash.create('hash2'),
+      },
+      {
+        publish: async () => undefined,
+        publishAll: async () => undefined,
       },
     );
 

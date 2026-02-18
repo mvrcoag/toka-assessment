@@ -26,7 +26,10 @@ describe('UpdateRoleUseCase', () => {
       save: async () => undefined,
       delete: async () => undefined,
     };
-    const useCase = new UpdateRoleUseCase(repository);
+    const useCase = new UpdateRoleUseCase(repository, {
+      publish: async () => undefined,
+      publishAll: async () => undefined,
+    });
 
     const updated = await useCase.execute({
       id: 'role-1',
@@ -46,7 +49,10 @@ describe('UpdateRoleUseCase', () => {
       save: async () => undefined,
       delete: async () => undefined,
     };
-    const useCase = new UpdateRoleUseCase(repository);
+    const useCase = new UpdateRoleUseCase(repository, {
+      publish: async () => undefined,
+      publishAll: async () => undefined,
+    });
 
     await expect(useCase.execute({ id: 'missing' })).rejects.toBeInstanceOf(
       ApplicationError,
@@ -71,7 +77,10 @@ describe('UpdateRoleUseCase', () => {
       save: async () => undefined,
       delete: async () => undefined,
     };
-    const useCase = new UpdateRoleUseCase(repository);
+    const useCase = new UpdateRoleUseCase(repository, {
+      publish: async () => undefined,
+      publishAll: async () => undefined,
+    });
 
     await expect(
       useCase.execute({ id: 'role-1', name: 'Manager' }),

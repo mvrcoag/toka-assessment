@@ -19,6 +19,8 @@ export class AuthConfig implements AuthSettings {
 
   readonly redisUrl: string;
   readonly postgresUrl: string;
+  readonly rabbitmqUrl: string;
+  readonly rabbitmqExchange: string;
   readonly clientId: string;
   readonly clientSecret: string;
   readonly redirectUris: string[];
@@ -53,6 +55,9 @@ export class AuthConfig implements AuthSettings {
     this.postgresUrl =
       process.env.DATABASE_URL ??
       'postgresql://toka:toka_password@postgres:5432/toka';
+    this.rabbitmqUrl =
+      process.env.RABBITMQ_URL ?? 'amqp://toka:toka_password@rabbitmq:5672';
+    this.rabbitmqExchange = process.env.RABBITMQ_EXCHANGE ?? 'toka.events';
     this.clientId = process.env.OAUTH_CLIENT_ID ?? 'toka-client';
     this.clientSecret = process.env.OAUTH_CLIENT_SECRET ?? 'toka-secret';
     this.redirectUris = (process.env.OAUTH_REDIRECT_URIS ?? 'http://localhost:3000/callback')

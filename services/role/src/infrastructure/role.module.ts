@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ACCESS_TOKEN_VERIFIER, ROLE_REPOSITORY } from '../application/ports/tokens';
+import { ACCESS_TOKEN_VERIFIER, EVENT_BUS, ROLE_REPOSITORY } from '../application/ports/tokens';
 import { CreateRoleUseCase } from '../application/use-cases/create-role.use-case';
 import { DeleteRoleUseCase } from '../application/use-cases/delete-role.use-case';
 import { GetRoleUseCase } from '../application/use-cases/get-role.use-case';
@@ -12,6 +12,7 @@ import { OidcTokenVerifier } from './security/oidc-token-verifier';
 import { RoleEntity } from './typeorm/role.entity';
 import { TypeOrmRoleRepository } from './typeorm/typeorm-role.repository';
 import { RoleRepository } from '../application/ports/role-repository';
+import { RabbitMqEventBus } from './rabbitmq/rabbitmq.event-bus';
 
 @Module({
   imports: [
@@ -31,6 +32,11 @@ import { RoleRepository } from '../application/ports/role-repository';
     RoleConfig,
     TypeOrmRoleRepository,
     OidcTokenVerifier,
+    RabbitMqEventBus,
+    {
+      provide: EVENT_BUS,
+      useExisting: RabbitMqEventBus,
+    },
     {
       provide: ROLE_REPOSITORY,
       useExisting: TypeOrmRoleRepository,
@@ -41,18 +47,21 @@ import { RoleRepository } from '../application/ports/role-repository';
     },
     {
       provide: CreateRoleUseCase,
-      useFactory: (repo: RoleRepository) => new CreateRoleUseCase(repo),
-      inject: [ROLE_REPOSITORY],
+      useFactory: (repo: RoleRepository, eventBus: RabbitMqEventBus) =>
+        new CreateRoleUseCase(repo, eventBus),
+      inject: [ROLE_REPOSITORY, EVENT_BUS],
     },
     {
       provide: UpdateRoleUseCase,
-      useFactory: (repo: RoleRepository) => new UpdateRoleUseCase(repo),
-      inject: [ROLE_REPOSITORY],
+      useFactory: (repo: RoleRepository, eventBus: RabbitMqEventBus) =>
+        new UpdateRoleUseCase(repo, eventBus),
+      inject: [ROLE_REPOSITORY, EVENT_BUS],
     },
     {
       provide: DeleteRoleUseCase,
-      useFactory: (repo: RoleRepository) => new DeleteRoleUseCase(repo),
-      inject: [ROLE_REPOSITORY],
+      useFactory: (repo: RoleRepository, eventBus: RabbitMqEventBus) =>
+        new DeleteRoleUseCase(repo, eventBus),
+      inject: [ROLE_REPOSITORY, EVENT_BUS],
     },
     {
       provide: GetRoleUseCase,
