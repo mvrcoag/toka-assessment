@@ -35,6 +35,8 @@ def create_app() -> FastAPI:
                 sources=get_sources_or_default(payload.sources),
                 access_token=auth.token,
                 max_items=payload.max_items,
+                actor_id=auth.claims.sub,
+                actor_role=auth.claims.role,
             )
         except RuntimeError as exc:
             raise HTTPException(status_code=502, detail=str(exc)) from exc
@@ -50,7 +52,12 @@ def create_app() -> FastAPI:
         use_case=Depends(get_query_use_case),
     ) -> QueryResponse:
         try:
-            result = use_case.execute(payload.question, payload.top_k)
+            result = use_case.execute(
+                payload.question,
+                payload.top_k,
+                actor_id=auth.claims.sub,
+                actor_role=auth.claims.role,
+            )
         except RuntimeError as exc:
             raise HTTPException(status_code=502, detail=str(exc)) from exc
         except ValueError as exc:

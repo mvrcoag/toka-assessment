@@ -8,10 +8,12 @@ import { ExchangeAuthorizationCodeUseCase } from '../../application/use-cases/ex
 import { GetUserInfoUseCase } from '../../application/use-cases/get-user-info.use-case';
 import { LoginAndIssueCodeUseCase } from '../../application/use-cases/login-and-issue-code.use-case';
 import { RefreshTokenUseCase } from '../../application/use-cases/refresh-token.use-case';
+import { LogoutUseCase } from '../../application/use-cases/logout.use-case';
 import { ValidateAuthorizationRequestUseCase } from '../../application/use-cases/validate-authorization-request.use-case';
 import { AuthorizeBodyDto } from './dto/authorize-body.dto';
 import { AuthorizeQueryDto } from './dto/authorize-query.dto';
 import { TokenRequestDto } from './dto/token-request.dto';
+import { LogoutRequestDto } from './dto/logout-request.dto';
 import { renderLoginForm } from './auth.view';
 
 @Controller()
@@ -22,6 +24,7 @@ export class AuthController {
     private readonly exchangeAuthorizationCode: ExchangeAuthorizationCodeUseCase,
     private readonly refreshToken: RefreshTokenUseCase,
     private readonly getUserInfo: GetUserInfoUseCase,
+    private readonly logoutUseCase: LogoutUseCase,
   ) {}
 
   @Get('oauth/authorize')
@@ -127,6 +130,21 @@ export class AuthController {
 
     const token = this.extractBearerToken(authorization);
     return this.getUserInfo.execute(token);
+  }
+
+  @Post('oauth/logout')
+  async logout(
+    @Headers('authorization') authorization?: string,
+    @Body() body: LogoutRequestDto = {},
+  ): Promise<void> {
+    if (!authorization) {
+      throw new ApplicationError('Missing Authorization header', 401);
+    }
+    const token = this.extractBearerToken(authorization);
+    await this.logoutUseCase.execute({
+      accessToken: token,
+      refreshToken: body?.refresh_token,
+    });
   }
 
   private mapTokenResponse(tokens: AuthTokensDto): Record<string, unknown> {

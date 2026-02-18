@@ -15,6 +15,8 @@ class Settings:
     user_service_url: str
     role_service_url: str
     audit_service_url: str
+    rabbitmq_url: str
+    rabbitmq_exchange: str
     request_timeout_seconds: float
     max_batch_size: int
 
@@ -38,6 +40,10 @@ class Settings:
             user_service_url=os.getenv("USER_SERVICE_URL", "http://user:3002/users"),
             role_service_url=os.getenv("ROLE_SERVICE_URL", "http://role:3003/roles"),
             audit_service_url=os.getenv("AUDIT_SERVICE_URL", "http://audit:3004/logs"),
+            rabbitmq_url=os.getenv(
+                "RABBITMQ_URL", "amqp://toka:toka_password@rabbitmq:5672"
+            ),
+            rabbitmq_exchange=os.getenv("RABBITMQ_EXCHANGE", "toka.events"),
             request_timeout_seconds=float(os.getenv("REQUEST_TIMEOUT_SECONDS", "10")),
             max_batch_size=int(os.getenv("EMBEDDING_BATCH_SIZE", "128")),
         )

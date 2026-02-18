@@ -3,13 +3,19 @@ import { toast } from 'sonner'
 import type { User } from '@/services/users.service'
 import { usersService } from '@/services/users.service'
 
-export function useUsers() {
+export function useUsers(enabled = true) {
   const [users, setUsers] = useState<User[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const refresh = useCallback(async () => {
+    if (!enabled) {
+      setUsers([])
+      setIsLoading(false)
+      setError(null)
+      return
+    }
     setIsLoading(true)
     setError(null)
     try {
@@ -22,7 +28,7 @@ export function useUsers() {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [enabled])
 
   useEffect(() => {
     refresh()

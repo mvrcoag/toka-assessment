@@ -97,4 +97,20 @@ export const authService = {
 
     return res.json()
   },
+
+  async logout(accessToken: string, refreshToken?: string | null): Promise<void> {
+    const res = await fetch(`${API_BASE_URL}/auth/oauth/logout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ refresh_token: refreshToken ?? undefined }),
+    })
+
+    if (!res.ok) {
+      const payload = await res.json().catch(() => ({}))
+      throw new Error(payload.error ?? 'No se pudo cerrar sesión')
+    }
+  },
 }

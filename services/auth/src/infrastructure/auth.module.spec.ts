@@ -35,6 +35,7 @@ import { RefreshTokenUseCase } from '../application/use-cases/refresh-token.use-
 import { GetUserInfoUseCase } from '../application/use-cases/get-user-info.use-case';
 import { GetOpenIdConfigurationUseCase } from '../application/use-cases/get-openid-configuration.use-case';
 import { GetJwksUseCase } from '../application/use-cases/get-jwks.use-case';
+import { LogoutUseCase } from '../application/use-cases/logout.use-case';
 
 describe('AuthModule providers', () => {
   it('builds provider factories', async () => {
@@ -62,6 +63,7 @@ describe('AuthModule providers', () => {
     const roleLookup = {
       getRoleAbilities: jest.fn(),
     } as unknown as HttpRoleLookup;
+    const eventBus = {} as RabbitMqEventBus;
     const clientRepo = byToken(OAUTH_CLIENT_REPOSITORY).useFactory(config);
     const authCodeRepo = byToken(AUTH_CODE_REPOSITORY).useFactory(redis);
     const refreshTokenRepo = byToken(REFRESH_TOKEN_REPOSITORY).useFactory(redis);
@@ -105,6 +107,12 @@ describe('AuthModule providers', () => {
       clock,
     );
     const userInfo = byToken(GetUserInfoUseCase).useFactory(tokenService, blacklist, userRepo);
+    const logout = byToken(LogoutUseCase).useFactory(
+      tokenService,
+      refreshTokenRepo,
+      blacklist,
+      eventBus,
+    );
     const openid = byToken(GetOpenIdConfigurationUseCase).useFactory(config);
     const jwks = byToken(GetJwksUseCase).useFactory(tokenService);
 
@@ -113,6 +121,7 @@ describe('AuthModule providers', () => {
     expect(exchange).toBeInstanceOf(ExchangeAuthorizationCodeUseCase);
     expect(refresh).toBeInstanceOf(RefreshTokenUseCase);
     expect(userInfo).toBeInstanceOf(GetUserInfoUseCase);
+    expect(logout).toBeInstanceOf(LogoutUseCase);
     expect(openid).toBeInstanceOf(GetOpenIdConfigurationUseCase);
     expect(jwks).toBeInstanceOf(GetJwksUseCase);
 

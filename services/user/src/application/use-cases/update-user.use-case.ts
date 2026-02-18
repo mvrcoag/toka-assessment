@@ -1,4 +1,5 @@
 import { Email } from '../../domain/value-objects/email';
+import { DomainEvent } from '../../domain/events/domain-event';
 import { RoleId } from '../../domain/value-objects/role-id';
 import { UserId } from '../../domain/value-objects/user-id';
 import { UserName } from '../../domain/value-objects/user-name';
@@ -15,6 +16,8 @@ export interface UpdateUserInput {
   password?: string;
   roleId?: string;
   accessToken?: string;
+  actorId?: string;
+  actorRole?: string;
 }
 
 export class UpdateUserUseCase {
@@ -32,8 +35,11 @@ export class UpdateUserUseCase {
       throw new ApplicationError('User not found', 404);
     }
 
+    let hasChanges = false;
+
     if (input.name && input.name !== user.name.value) {
       user.rename(UserName.create(input.name));
+      hasChanges = true;
     }
 
     if (input.email && input.email !== user.email.value) {
@@ -43,11 +49,13 @@ export class UpdateUserUseCase {
         throw new ApplicationError('Email already exists', 409);
       }
       user.changeEmail(email);
+      hasChanges = true;
     }
 
     if (input.password) {
       const passwordHash = await this.hasher.hash(input.password);
       user.changePassword(passwordHash);
+      hasChanges = true;
     }
 
     if (input.roleId && input.roleId !== user.roleId.value) {
@@ -59,11 +67,34 @@ export class UpdateUserUseCase {
         throw new ApplicationError('Role does not exist', 400);
       }
       user.changeRole(RoleId.create(input.roleId));
+      hasChanges = true;
     }
 
+    if (!hasChanges) {
+      return user;
+    }
+
+    user.markUpdated();
+
     await this.repository.save(user);
-    await this.eventBus.publishAll(user.pullDomainEvents());
+    const events = this.attachActor(user.pullDomainEvents(), input.actorId, input.actorRole);
+    await this.eventBus.publishAll(events);
     return user;
+  }
+
+  private attachActor(
+    events: DomainEvent[],
+    actorId?: string,
+    actorRole?: string,
+  ) {
+    if (!actorId && !actorRole) {
+      return events;
+    }
+    events.forEach((event) => {
+      event.actorId = actorId;
+      event.actorRole = actorRole;
+    });
+    return events;
   }
 
   private async assertRoleExists(

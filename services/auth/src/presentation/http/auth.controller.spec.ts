@@ -28,6 +28,7 @@ describe('AuthController', () => {
       { execute: async () => ({}) } as any,
       { execute: async () => ({}) } as any,
       { execute: async () => ({}) } as any,
+      { execute: async () => undefined } as any,
     );
     const res = buildRes();
 
@@ -51,6 +52,7 @@ describe('AuthController', () => {
       { execute: async () => ({}) } as any,
       { execute: async () => ({}) } as any,
       { execute: async () => ({}) } as any,
+      { execute: async () => undefined } as any,
     );
     const res = buildRes();
 
@@ -75,6 +77,7 @@ describe('AuthController', () => {
       { execute: async () => ({}) } as any,
       { execute: async () => ({}) } as any,
       { execute: async () => ({}) } as any,
+      { execute: async () => undefined } as any,
     );
     const res = buildRes();
 
@@ -100,6 +103,7 @@ describe('AuthController', () => {
       { execute: async () => ({}) } as any,
       { execute: async () => ({}) } as any,
       { execute: async () => ({}) } as any,
+      { execute: async () => undefined } as any,
     );
     const res = buildRes();
 
@@ -126,6 +130,7 @@ describe('AuthController', () => {
       { execute: async () => ({ accessToken: 'a', idToken: 'i', refreshToken: 'r', tokenType: 'Bearer', expiresIn: 1 }) } as any,
       { execute: async () => ({ accessToken: 'a2', idToken: 'i2', refreshToken: 'r2', tokenType: 'Bearer', expiresIn: 1 }) } as any,
       { execute: async () => ({}) } as any,
+      { execute: async () => undefined } as any,
     );
 
     const authCodeTokens = await controller.token({
@@ -153,6 +158,7 @@ describe('AuthController', () => {
       { execute: async () => ({}) } as any,
       { execute: async () => ({}) } as any,
       { execute: async () => ({}) } as any,
+      { execute: async () => undefined } as any,
     );
 
     await expect(
@@ -171,6 +177,7 @@ describe('AuthController', () => {
       { execute: async () => ({}) } as any,
       { execute: async () => ({}) } as any,
       { execute: async () => ({ sub: 'user-1' }) } as any,
+      { execute: async () => undefined } as any,
     );
 
     await expect(controller.userInfo('Bearer token')).resolves.toEqual({ sub: 'user-1' });
@@ -183,6 +190,7 @@ describe('AuthController', () => {
       { execute: async () => ({}) } as any,
       { execute: async () => ({}) } as any,
       { execute: async () => ({ sub: 'user-1' }) } as any,
+      { execute: async () => undefined } as any,
     );
 
     await expect(controller.userInfo()).rejects.toBeDefined();

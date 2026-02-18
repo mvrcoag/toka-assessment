@@ -29,7 +29,7 @@ export function AiPage() {
   const { user } = useAuth()
   const { isLoading: isStatusLoading, response, refresh } = useAiStatus()
   const { isLoading: isIngesting, result, ingest } = useAiIngest()
-  const canCreate = user?.roleAbilities?.canCreate !== false
+  const canCreate = user?.roleAbilities?.canCreate ?? false
 
   const form = useForm<IngestFormValues>({
     resolver: zodResolver(ingestSchema),

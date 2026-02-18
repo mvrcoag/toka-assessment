@@ -29,6 +29,7 @@ interface AuthState {
   clear: () => void
   fetchUser: () => Promise<void>
   refreshTokens: () => Promise<boolean>
+  logout: () => Promise<void>
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -74,6 +75,18 @@ export const useAuthStore = create<AuthState>()(
           get().clear()
           return false
         }
+      },
+      logout: async () => {
+        const accessToken = get().accessToken
+        const refreshToken = get().refreshToken
+        if (accessToken) {
+          try {
+            await authService.logout(accessToken, refreshToken)
+          } catch {
+            // Ignore logout errors and clear local state.
+          }
+        }
+        get().clear()
       },
     }),
     {

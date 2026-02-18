@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { useAuth } from '@/hooks/use-auth'
 import { useRoleOptions } from '@/hooks/use-role-options'
 import { useUsers } from '@/hooks/use-users'
 import type { User } from '@/services/users.service'
@@ -36,8 +37,14 @@ const defaultValues: UserFormValues = {
 }
 
 export function UsersPage() {
-  const { users, isLoading, isSaving, error, createUser, updateUser, removeUser } = useUsers()
-  const { roles } = useRoleOptions()
+  const { user } = useAuth()
+  const abilities = user?.roleAbilities
+  const canView = abilities?.canView ?? false
+  const canCreate = abilities?.canCreate ?? false
+  const canUpdate = abilities?.canUpdate ?? false
+  const canDelete = abilities?.canDelete ?? false
+  const { users, isLoading, isSaving, error, createUser, updateUser, removeUser } = useUsers(canView)
+  const { roles } = useRoleOptions(canView)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [deleteUser, setDeleteUser] = useState<User | null>(null)
@@ -48,12 +55,18 @@ export function UsersPage() {
   })
 
   const openCreate = () => {
+    if (!canCreate) {
+      return
+    }
     setEditingUser(null)
     form.reset(defaultValues)
     setDialogOpen(true)
   }
 
   const openEdit = (user: User) => {
+    if (!canUpdate) {
+      return
+    }
     setEditingUser(user)
     form.reset({ name: user.name, email: user.email, roleId: user.roleId, password: '' })
     setDialogOpen(true)
@@ -81,6 +94,7 @@ export function UsersPage() {
   }
 
   const confirmDelete = async () => {
+    if (!canDelete) return
     if (!deleteUser) return
     const success = await removeUser(deleteUser.id)
     if (success) {
@@ -102,50 +116,64 @@ export function UsersPage() {
           <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Users</p>
           <h2 className="text-2xl font-semibold">Team directory</h2>
         </div>
-        <Button onClick={openCreate}>New user</Button>
+        {canCreate ? <Button onClick={openCreate}>New user</Button> : null}
       </div>
 
-      <Card className="border bg-white/80 p-6 shadow-sm">
-        {error ? <p className="text-sm text-destructive">{error}</p> : null}
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.name}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>
-                  {roles.find((role) => role.id === user.roleId)?.name ?? user.roleId}
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm" onClick={() => openEdit(user)}>
-                      Edit
-                    </Button>
-                    <Button variant="destructive" size="sm" onClick={() => setDeleteUser(user)}>
-                      Delete
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-            {!isLoading && users.length === 0 ? (
+      {canView ? (
+        <Card className="border bg-white/80 p-6 shadow-sm">
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={4} className="text-center text-sm text-muted-foreground">
-                  No users yet. Invite one to get started.
-                </TableCell>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-            ) : null}
-          </TableBody>
-        </Table>
-      </Card>
+            </TableHeader>
+            <TableBody>
+              {users.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">{user.name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    {roles.find((role) => role.id === user.roleId)?.name ?? user.roleId}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      {canUpdate ? (
+                        <Button variant="outline" size="sm" onClick={() => openEdit(user)}>
+                          Edit
+                        </Button>
+                      ) : null}
+                      {canDelete ? (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => setDeleteUser(user)}
+                        >
+                          Delete
+                        </Button>
+                      ) : null}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {!isLoading && users.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-sm text-muted-foreground">
+                    No users yet. Invite one to get started.
+                  </TableCell>
+                </TableRow>
+              ) : null}
+            </TableBody>
+          </Table>
+        </Card>
+      ) : (
+        <Card className="border bg-white/80 p-6 text-sm text-muted-foreground shadow-sm">
+          Your role does not allow viewing users.
+        </Card>
+      )}
 
       <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
         <DialogContent>
@@ -210,7 +238,10 @@ export function UsersPage() {
               <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSaving}>
+              <Button
+                type="submit"
+                disabled={isSaving || (editingUser ? !canUpdate : !canCreate)}
+              >
                 {editingUser ? 'Save changes' : 'Create user'}
               </Button>
             </DialogFooter>
@@ -230,7 +261,7 @@ export function UsersPage() {
             <Button variant="outline" onClick={() => setDeleteUser(null)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={confirmDelete} disabled={isSaving}>
+            <Button variant="destructive" onClick={confirmDelete} disabled={isSaving || !canDelete}>
               Delete user
             </Button>
           </DialogFooter>

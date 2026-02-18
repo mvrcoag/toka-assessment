@@ -19,10 +19,11 @@ describe('User', () => {
     user.changeEmail(Email.create('new@toka.local'));
     user.changeRole(RoleId.create('role-2'));
     user.changePassword(PasswordHash.create('hash2'));
+    user.markUpdated();
     user.markDeleted();
 
     const events = user.pullDomainEvents();
-    expect(events.length).toBeGreaterThan(1);
+    expect(events).toHaveLength(3);
     expect(events[0].name).toBe('UserCreated');
     expect(user.pullDomainEvents()).toHaveLength(0);
   });

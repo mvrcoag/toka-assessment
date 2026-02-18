@@ -7,8 +7,10 @@ import {
   Param,
   Patch,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import { CreateUserUseCase } from '../../application/use-cases/create-user.use-case';
 import { DeleteUserUseCase } from '../../application/use-cases/delete-user.use-case';
 import { GetUserUseCase } from '../../application/use-cases/get-user.use-case';
@@ -19,9 +21,10 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { AuthGuard } from './guards/auth.guard';
+import { RoleAbilitiesGuard } from './guards/role-abilities.guard';
 
 @Controller('users')
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, RoleAbilitiesGuard)
 export class UserController {
   constructor(
     private readonly createUser: CreateUserUseCase,
@@ -46,11 +49,15 @@ export class UserController {
   @Post()
   async create(
     @Body() body: CreateUserDto,
+    @Req() request: Request,
     @Headers('authorization') authorization?: string,
   ): Promise<UserResponseDto> {
+    const actor = (request as any).user as { sub?: string; role?: string } | undefined;
     const user = await this.createUser.execute({
       ...body,
       accessToken: authorization,
+      actorId: actor?.sub,
+      actorRole: actor?.role,
     });
     return this.toResponse(user);
   }
@@ -59,19 +66,24 @@ export class UserController {
   async update(
     @Param('id') id: string,
     @Body() body: UpdateUserDto,
+    @Req() request: Request,
     @Headers('authorization') authorization?: string,
   ): Promise<UserResponseDto> {
+    const actor = (request as any).user as { sub?: string; role?: string } | undefined;
     const user = await this.updateUser.execute({
       id,
       ...body,
       accessToken: authorization,
+      actorId: actor?.sub,
+      actorRole: actor?.role,
     });
     return this.toResponse(user);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string): Promise<void> {
-    await this.deleteUser.execute(id);
+  async remove(@Param('id') id: string, @Req() request: Request): Promise<void> {
+    const actor = (request as any).user as { sub?: string; role?: string } | undefined;
+    await this.deleteUser.execute(id, actor?.sub, actor?.role);
   }
 
   private toResponse(user: User): UserResponseDto {

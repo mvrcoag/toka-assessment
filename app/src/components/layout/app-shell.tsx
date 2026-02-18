@@ -23,7 +23,8 @@ const navItems = [
 
 export function AppShell() {
   const { user, logout } = useAuth()
-  const { roles } = useRoleOptions()
+  const canView = user?.roleAbilities?.canView ?? false
+  const { roles } = useRoleOptions(canView)
   const roleLabel = roles.find((role) => role.id === user?.roleId)?.name ?? user?.roleId
 
   return (

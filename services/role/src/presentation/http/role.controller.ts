@@ -7,8 +7,10 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import { CheckRoleExistsUseCase } from '../../application/use-cases/check-role-exists.use-case';
 import { CreateRoleUseCase } from '../../application/use-cases/create-role.use-case';
 import { DeleteRoleUseCase } from '../../application/use-cases/delete-role.use-case';
@@ -20,9 +22,10 @@ import { CreateRoleDto } from './dto/create-role.dto';
 import { RoleResponseDto } from './dto/role-response.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { AuthGuard } from './guards/auth.guard';
+import { RoleAbilitiesGuard } from './guards/role-abilities.guard';
 
 @Controller('roles')
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, RoleAbilitiesGuard)
 export class RoleController {
   constructor(
     private readonly createRole: CreateRoleUseCase,
@@ -55,8 +58,16 @@ export class RoleController {
   }
 
   @Post()
-  async create(@Body() body: CreateRoleDto): Promise<RoleResponseDto> {
-    const role = await this.createRole.execute(body);
+  async create(
+    @Body() body: CreateRoleDto,
+    @Req() request: Request,
+  ): Promise<RoleResponseDto> {
+    const actor = (request as any).user as { sub?: string; role?: string } | undefined;
+    const role = await this.createRole.execute({
+      ...body,
+      actorId: actor?.sub,
+      actorRole: actor?.role,
+    });
     return this.toResponse(role);
   }
 
@@ -64,14 +75,22 @@ export class RoleController {
   async update(
     @Param('id') id: string,
     @Body() body: UpdateRoleDto,
+    @Req() request: Request,
   ): Promise<RoleResponseDto> {
-    const role = await this.updateRole.execute({ id, ...body });
+    const actor = (request as any).user as { sub?: string; role?: string } | undefined;
+    const role = await this.updateRole.execute({
+      id,
+      ...body,
+      actorId: actor?.sub,
+      actorRole: actor?.role,
+    });
     return this.toResponse(role);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string): Promise<void> {
-    await this.deleteRole.execute(id);
+  async remove(@Param('id') id: string, @Req() request: Request): Promise<void> {
+    const actor = (request as any).user as { sub?: string; role?: string } | undefined;
+    await this.deleteRole.execute(id, actor?.sub, actor?.role);
   }
 
   private toResponse(role: Role): RoleResponseDto {

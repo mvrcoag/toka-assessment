@@ -37,15 +37,19 @@ describe('UserController', () => {
       { execute: async () => [user] } as any,
     );
 
-    const created = await controller.create({
-      name: 'Toka User',
-      email: 'user@toka.local',
-      password: 'secret123',
-      roleId: 'role-1',
-    });
+    const created = await controller.create(
+      {
+        name: 'Toka User',
+        email: 'user@toka.local',
+        password: 'secret123',
+        roleId: 'role-1',
+      },
+      undefined,
+      {} as any,
+    );
     expect(created.email).toBe('user@toka.local');
 
-    const updated = await controller.update('user-1', { name: 'New Name' });
+    const updated = await controller.update('user-1', { name: 'New Name' }, undefined, {} as any);
     expect(updated.name).toBe('Toka User');
   });
 
@@ -58,6 +62,6 @@ describe('UserController', () => {
       { execute: async () => [user] } as any,
     );
 
-    await expect(controller.remove('user-1')).resolves.toBeUndefined();
+    await expect(controller.remove('user-1', {} as any)).resolves.toBeUndefined();
   });
 });

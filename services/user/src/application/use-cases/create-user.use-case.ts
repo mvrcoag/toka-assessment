@@ -1,4 +1,5 @@
 import { User } from '../../domain/entities/user';
+import { DomainEvent } from '../../domain/events/domain-event';
 import { Email } from '../../domain/value-objects/email';
 import { RoleId } from '../../domain/value-objects/role-id';
 import { UserId } from '../../domain/value-objects/user-id';
@@ -15,6 +16,8 @@ export interface CreateUserInput {
   password: string;
   roleId: string;
   accessToken?: string;
+  actorId?: string;
+  actorRole?: string;
 }
 
 export class CreateUserUseCase {
@@ -50,8 +53,24 @@ export class CreateUserUseCase {
     });
 
     await this.repository.save(user);
-    await this.eventBus.publishAll(user.pullDomainEvents());
+    const events = this.attachActor(user.pullDomainEvents(), input.actorId, input.actorRole);
+    await this.eventBus.publishAll(events);
     return user;
+  }
+
+  private attachActor(
+    events: DomainEvent[],
+    actorId?: string,
+    actorRole?: string,
+  ) {
+    if (!actorId && !actorRole) {
+      return events;
+    }
+    events.forEach((event) => {
+      event.actorId = actorId;
+      event.actorRole = actorRole;
+    });
+    return events;
   }
 
   private async assertRoleExists(

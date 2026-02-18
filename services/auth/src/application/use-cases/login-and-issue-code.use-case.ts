@@ -9,6 +9,7 @@ import { Clock } from '../ports/clock';
 import { EventBus } from '../ports/event-bus';
 import { PasswordHasher } from '../ports/password-hasher';
 import { UserRepository } from '../ports/user-repository';
+import { DomainEvent } from '../../domain/events/domain-event';
 
 export interface LoginAndIssueCodeInput {
   authorizationRequest: AuthorizationRequest;
@@ -65,7 +66,27 @@ export class LoginAndIssueCodeUseCase {
     });
 
     await this.authCodeRepository.save(authCode);
-    await this.eventBus.publishAll(user.pullDomainEvents());
+    const events = this.attachActor(
+      user.pullDomainEvents(),
+      user.id.value,
+      user.roleId.value,
+    );
+    await this.eventBus.publishAll(events);
     return code;
+  }
+
+  private attachActor(
+    events: DomainEvent[],
+    actorId?: string,
+    actorRole?: string,
+  ) {
+    if (!actorId && !actorRole) {
+      return events;
+    }
+    events.forEach((event) => {
+      event.actorId = actorId;
+      event.actorRole = actorRole;
+    });
+    return events;
   }
 }

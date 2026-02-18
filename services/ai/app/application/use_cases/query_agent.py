@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from ..ports.embeddings import ChatClient, EmbeddingClient
+from ..ports.event_bus import EventBus
 from ..ports.vector_store import RetrievedDocument, VectorStore
 
 
@@ -16,12 +17,20 @@ class QueryAgentUseCase:
         embeddings: EmbeddingClient,
         chat: ChatClient,
         vector_store: VectorStore,
+        event_bus: EventBus,
     ) -> None:
         self.embeddings = embeddings
         self.chat = chat
         self.vector_store = vector_store
+        self.event_bus = event_bus
 
-    def execute(self, question: str, top_k: int) -> QueryResult:
+    def execute(
+        self,
+        question: str,
+        top_k: int,
+        actor_id: str | None = None,
+        actor_role: str | None = None,
+    ) -> QueryResult:
         embedding = self.embeddings.embed_texts([question])[0]
         retrieved = self.vector_store.query(embedding, top_k)
         context = "\n".join(
@@ -35,4 +44,14 @@ class QueryAgentUseCase:
         )
         user_prompt = f"Question: {question}\n\nContext:\n{context}"
         answer = self.chat.generate(system_prompt, user_prompt)
+        self.event_bus.publish(
+            "AiQueried",
+            {
+                "actorId": actor_id,
+                "actorRole": actor_role,
+                "question": question,
+                "topK": top_k,
+                "sourceCount": len(retrieved),
+            },
+        )
         return QueryResult(answer=answer, sources=retrieved)

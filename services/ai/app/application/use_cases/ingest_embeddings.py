@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 
 from ..ports.cursor_store import CursorStore
 from ..ports.embeddings import EmbeddingClient
+from ..ports.event_bus import EventBus
 from ..ports.sources import AuditGateway, RoleGateway, UserGateway
 from ..ports.vector_store import VectorStore
 from ...domain.document import EmbeddingDocument
@@ -24,6 +25,7 @@ class IngestEmbeddingsUseCase:
         embeddings: EmbeddingClient,
         vector_store: VectorStore,
         cursor_store: CursorStore,
+        event_bus: EventBus,
     ) -> None:
         self.users = users
         self.roles = roles
@@ -31,12 +33,15 @@ class IngestEmbeddingsUseCase:
         self.embeddings = embeddings
         self.vector_store = vector_store
         self.cursor_store = cursor_store
+        self.event_bus = event_bus
 
     def execute(
         self,
         sources: list[SourceType],
         access_token: str | None,
         max_items: int | None = None,
+        actor_id: str | None = None,
+        actor_role: str | None = None,
     ) -> IngestResult:
         ingested: dict[str, int] = {}
         cursors: dict[str, str | None] = {}
@@ -55,7 +60,18 @@ class IngestEmbeddingsUseCase:
                     access_token, max_items
                 )
 
-        return IngestResult(ingested=ingested, cursors=cursors)
+        result = IngestResult(ingested=ingested, cursors=cursors)
+        self.event_bus.publish(
+            "AiIngested",
+            {
+                "actorId": actor_id,
+                "actorRole": actor_role,
+                "sources": [source.value for source in sources],
+                "maxItems": max_items,
+                "ingested": ingested,
+            },
+        )
+        return result
 
     def _ingest_users(
         self, access_token: str | None, max_items: int | None

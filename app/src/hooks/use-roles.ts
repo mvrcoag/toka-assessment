@@ -5,13 +5,19 @@ import { rolesService } from '@/services/roles.service'
 
 type RolePayload = { name: string } & RoleAbilities
 
-export function useRoles() {
+export function useRoles(enabled = true) {
   const [roles, setRoles] = useState<Role[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const refresh = useCallback(async () => {
+    if (!enabled) {
+      setRoles([])
+      setIsLoading(false)
+      setError(null)
+      return
+    }
     setIsLoading(true)
     setError(null)
     try {
@@ -24,7 +30,7 @@ export function useRoles() {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [enabled])
 
   useEffect(() => {
     refresh()

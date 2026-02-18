@@ -56,21 +56,21 @@ export class User {
 
   rename(name: UserName): void {
     this.props.name = name;
-    this.domainEvents.push(new UserUpdatedEvent(this.id.value, this.email.value));
   }
 
   changeEmail(email: Email): void {
     this.props.email = email;
-    this.domainEvents.push(new UserUpdatedEvent(this.id.value, this.email.value));
   }
 
   changePassword(passwordHash: PasswordHash): void {
     this.props.passwordHash = passwordHash;
-    this.domainEvents.push(new UserUpdatedEvent(this.id.value, this.email.value));
   }
 
   changeRole(roleId: RoleId): void {
     this.props.roleId = roleId;
+  }
+
+  markUpdated(): void {
     this.domainEvents.push(new UserUpdatedEvent(this.id.value, this.email.value));
   }
 

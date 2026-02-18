@@ -23,6 +23,11 @@ export function renderLoginForm(model: LoginViewModel): string {
       :root {
         color-scheme: light;
       }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
       body {
         margin: 0;
         font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, serif;
@@ -47,6 +52,9 @@ export function renderLoginForm(model: LoginViewModel): string {
       p {
         margin: 0 0 24px;
         color: #52606d;
+      }
+      form {
+        width: 100%;
       }
       label {
         display: block;

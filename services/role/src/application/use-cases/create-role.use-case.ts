@@ -1,4 +1,5 @@
 import { Role } from '../../domain/entities/role';
+import { DomainEvent } from '../../domain/events/domain-event';
 import { RoleAbilities } from '../../domain/value-objects/role-abilities';
 import { RoleName } from '../../domain/value-objects/role-name';
 import { ApplicationError } from '../errors/application-error';
@@ -11,6 +12,8 @@ export interface CreateRoleInput {
   canCreate: boolean;
   canUpdate: boolean;
   canDelete: boolean;
+  actorId?: string;
+  actorRole?: string;
 }
 
 export class CreateRoleUseCase {
@@ -35,7 +38,23 @@ export class CreateRoleUseCase {
 
     const role = Role.create(name, abilities);
     await this.repository.save(role);
-    await this.eventBus.publishAll(role.pullDomainEvents());
+    const events = this.attachActor(role.pullDomainEvents(), input.actorId, input.actorRole);
+    await this.eventBus.publishAll(events);
     return role;
+  }
+
+  private attachActor(
+    events: DomainEvent[],
+    actorId?: string,
+    actorRole?: string,
+  ) {
+    if (!actorId && !actorRole) {
+      return events;
+    }
+    events.forEach((event) => {
+      event.actorId = actorId;
+      event.actorRole = actorRole;
+    });
+    return events;
   }
 }

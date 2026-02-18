@@ -133,6 +133,8 @@ services:
       context: ./services/ai
     environment:
       PORT: ${AI_PORT:-3005}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://toka:toka_password@rabbitmq:5672}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE:-toka.events}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       OPENAI_CHAT_MODEL: ${OPENAI_CHAT_MODEL:-gpt-4o-mini}
       OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:-text-embedding-3-small}

@@ -127,6 +127,9 @@ export class AuditEventConsumer implements OnModuleInit, OnModuleDestroy {
     if (lowered.includes('auth')) {
       return 'auth';
     }
+    if (lowered.includes('ai')) {
+      return 'ai';
+    }
 
     return 'event';
   }

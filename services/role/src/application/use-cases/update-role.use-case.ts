@@ -1,4 +1,5 @@
 import { RoleAbilities } from '../../domain/value-objects/role-abilities';
+import { DomainEvent } from '../../domain/events/domain-event';
 import { RoleId } from '../../domain/value-objects/role-id';
 import { RoleName } from '../../domain/value-objects/role-name';
 import { ApplicationError } from '../errors/application-error';
@@ -12,6 +13,8 @@ export interface UpdateRoleInput {
   canCreate?: boolean;
   canUpdate?: boolean;
   canDelete?: boolean;
+  actorId?: string;
+  actorRole?: string;
 }
 
 export class UpdateRoleUseCase {
@@ -27,6 +30,8 @@ export class UpdateRoleUseCase {
       throw new ApplicationError('Role not found', 404);
     }
 
+    let hasChanges = false;
+
     if (input.name && input.name !== role.name.value) {
       const name = RoleName.create(input.name);
       const existing = await this.repository.findByName(name);
@@ -34,6 +39,7 @@ export class UpdateRoleUseCase {
         throw new ApplicationError('Role name already exists', 409);
       }
       role.rename(name);
+      hasChanges = true;
     }
 
     if (
@@ -49,10 +55,33 @@ export class UpdateRoleUseCase {
         canDelete: input.canDelete ?? role.abilities.canDelete,
       });
       role.updateAbilities(abilities);
+      hasChanges = true;
     }
 
+    if (!hasChanges) {
+      return role;
+    }
+
+    role.markUpdated();
+
     await this.repository.save(role);
-    await this.eventBus.publishAll(role.pullDomainEvents());
+    const events = this.attachActor(role.pullDomainEvents(), input.actorId, input.actorRole);
+    await this.eventBus.publishAll(events);
     return role;
+  }
+
+  private attachActor(
+    events: DomainEvent[],
+    actorId?: string,
+    actorRole?: string,
+  ) {
+    if (!actorId && !actorRole) {
+      return events;
+    }
+    events.forEach((event) => {
+      event.actorId = actorId;
+      event.actorRole = actorRole;
+    });
+    return events;
   }
 }

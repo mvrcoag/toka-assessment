@@ -5,6 +5,8 @@ export class UserDeletedEvent implements DomainEvent {
   readonly occurredAt: Date;
   readonly userId: string;
   readonly email: string;
+  actorId?: string;
+  actorRole?: string;
 
   constructor(userId: string, email: string, occurredAt: Date = new Date()) {
     this.userId = userId;

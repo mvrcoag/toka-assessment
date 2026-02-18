@@ -13,7 +13,8 @@ RUN pip install --no-cache-dir --upgrade pip \
     "chromadb>=1.1.0" \
     "httpx>=0.28.1" \
     "openai>=1.108.0" \
-    "pyjwt[crypto]>=2.10.1"
+    "pyjwt[crypto]>=2.10.1" \
+    "pika>=1.3.2"
 
 COPY . .
 

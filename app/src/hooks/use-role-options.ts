@@ -3,11 +3,16 @@ import { toast } from 'sonner'
 import type { Role } from '@/services/roles.service'
 import { rolesService } from '@/services/roles.service'
 
-export function useRoleOptions() {
+export function useRoleOptions(enabled = true) {
   const [roles, setRoles] = useState<Role[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   const refresh = useCallback(async () => {
+    if (!enabled) {
+      setRoles([])
+      setIsLoading(false)
+      return
+    }
     setIsLoading(true)
     try {
       const data = await rolesService.list()
@@ -18,7 +23,7 @@ export function useRoleOptions() {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [enabled])
 
   useEffect(() => {
     refresh()

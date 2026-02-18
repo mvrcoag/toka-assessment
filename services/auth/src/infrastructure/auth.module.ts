@@ -18,6 +18,7 @@ import { GetJwksUseCase } from '../application/use-cases/get-jwks.use-case';
 import { GetOpenIdConfigurationUseCase } from '../application/use-cases/get-openid-configuration.use-case';
 import { GetUserInfoUseCase } from '../application/use-cases/get-user-info.use-case';
 import { LoginAndIssueCodeUseCase } from '../application/use-cases/login-and-issue-code.use-case';
+import { LogoutUseCase } from '../application/use-cases/logout.use-case';
 import { RefreshTokenUseCase } from '../application/use-cases/refresh-token.use-case';
 import { ValidateAuthorizationRequestUseCase } from '../application/use-cases/validate-authorization-request.use-case';
 import { AuthController } from '../presentation/http/auth.controller';
@@ -206,6 +207,22 @@ import { RoleLookup } from '../application/ports/role-lookup';
         userRepository: UserRepository,
       ) => new GetUserInfoUseCase(tokenService, tokenBlacklist, userRepository),
       inject: [TOKEN_SERVICE, TOKEN_BLACKLIST, USER_REPOSITORY],
+    },
+    {
+      provide: LogoutUseCase,
+      useFactory: (
+        tokenService: JwtTokenService,
+        refreshTokenRepository: RedisRefreshTokenRepository,
+        tokenBlacklist: RedisTokenBlacklist,
+        eventBus: RabbitMqEventBus,
+      ) =>
+        new LogoutUseCase(
+          tokenService,
+          refreshTokenRepository,
+          tokenBlacklist,
+          eventBus,
+        ),
+      inject: [TOKEN_SERVICE, REFRESH_TOKEN_REPOSITORY, TOKEN_BLACKLIST, EVENT_BUS],
     },
     {
       provide: GetOpenIdConfigurationUseCase,

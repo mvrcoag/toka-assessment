@@ -28,9 +28,10 @@ describe('Role entity', () => {
         canDelete: false,
       }),
     );
+    role.markUpdated();
 
     const updatedEvents = role.pullDomainEvents();
-    expect(updatedEvents).toHaveLength(2);
+    expect(updatedEvents).toHaveLength(1);
     expect(updatedEvents[0].name).toBe('RoleUpdated');
 
     role.markDeleted();

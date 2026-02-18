@@ -18,6 +18,7 @@ from ..infrastructure.http.service_clients import (
     UserServiceClient,
 )
 from ..infrastructure.openai.client import OpenAIChatClient, OpenAIEmbeddingClient
+from ..infrastructure.rabbitmq.event_bus import RabbitMqEventBus
 
 
 @dataclass(frozen=True)
@@ -34,6 +35,11 @@ def get_settings() -> Settings:
 @lru_cache
 def get_token_verifier() -> JwtAccessTokenVerifier:
     return JwtAccessTokenVerifier(get_settings())
+
+
+@lru_cache
+def get_event_bus() -> RabbitMqEventBus:
+    return RabbitMqEventBus(get_settings())
 
 
 def get_auth_context(
@@ -73,6 +79,7 @@ def require_create_permission(
 
 def get_ingest_use_case(
     settings: Annotated[Settings, Depends(get_settings)],
+    event_bus: Annotated[RabbitMqEventBus, Depends(get_event_bus)],
 ) -> IngestEmbeddingsUseCase:
     return IngestEmbeddingsUseCase(
         users=UserServiceClient(settings),
@@ -81,16 +88,19 @@ def get_ingest_use_case(
         embeddings=OpenAIEmbeddingClient(settings),
         vector_store=ChromaVectorStore(settings),
         cursor_store=ChromaCursorStore(settings),
+        event_bus=event_bus,
     )
 
 
 def get_query_use_case(
     settings: Annotated[Settings, Depends(get_settings)],
+    event_bus: Annotated[RabbitMqEventBus, Depends(get_event_bus)],
 ) -> QueryAgentUseCase:
     return QueryAgentUseCase(
         embeddings=OpenAIEmbeddingClient(settings),
         chat=OpenAIChatClient(settings),
         vector_store=ChromaVectorStore(settings),
+        event_bus=event_bus,
     )
 
 

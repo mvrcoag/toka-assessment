@@ -7,7 +7,7 @@ export function useAuth() {
   const accessToken = useAuthStore((state) => state.accessToken)
   const user = useAuthStore((state) => state.user)
   const fetchUser = useAuthStore((state) => state.fetchUser)
-  const clear = useAuthStore((state) => state.clear)
+  const logoutStore = useAuthStore((state) => state.logout)
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export function useAuth() {
   }
 
   const logout = () => {
-    clear()
+    void logoutStore()
   }
 
   return {

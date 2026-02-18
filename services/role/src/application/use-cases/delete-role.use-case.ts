@@ -1,4 +1,5 @@
 import { RoleId } from '../../domain/value-objects/role-id';
+import { DomainEvent } from '../../domain/events/domain-event';
 import { ApplicationError } from '../errors/application-error';
 import { EventBus } from '../ports/event-bus';
 import { RoleRepository } from '../ports/role-repository';
@@ -9,7 +10,7 @@ export class DeleteRoleUseCase {
     private readonly eventBus: EventBus,
   ) {}
 
-  async execute(id: string): Promise<void> {
+  async execute(id: string, actorId?: string, actorRole?: string): Promise<void> {
     const roleId = RoleId.create(id);
     const role = await this.repository.findById(roleId);
     if (!role) {
@@ -18,6 +19,22 @@ export class DeleteRoleUseCase {
 
     role.markDeleted();
     await this.repository.delete(role);
-    await this.eventBus.publishAll(role.pullDomainEvents());
+    const events = this.attachActor(role.pullDomainEvents(), actorId, actorRole);
+    await this.eventBus.publishAll(events);
+  }
+
+  private attachActor(
+    events: DomainEvent[],
+    actorId?: string,
+    actorRole?: string,
+  ) {
+    if (!actorId && !actorRole) {
+      return events;
+    }
+    events.forEach((event) => {
+      event.actorId = actorId;
+      event.actorRole = actorRole;
+    });
+    return events;
   }
 }

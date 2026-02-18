@@ -5,6 +5,8 @@ export class RoleUpdatedEvent implements DomainEvent {
   readonly occurredAt: Date;
   readonly roleId: string;
   readonly roleName: string;
+  actorId?: string;
+  actorRole?: string;
 
   constructor(roleId: string, roleName: string, occurredAt: Date = new Date()) {
     this.roleId = roleId;

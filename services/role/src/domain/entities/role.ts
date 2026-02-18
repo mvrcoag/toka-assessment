@@ -48,11 +48,13 @@ export class Role {
 
   rename(name: RoleName): void {
     this.props.name = name;
-    this.domainEvents.push(new RoleUpdatedEvent(this.id.value, this.name.value));
   }
 
   updateAbilities(abilities: RoleAbilities): void {
     this.props.abilities = abilities;
+  }
+
+  markUpdated(): void {
     this.domainEvents.push(new RoleUpdatedEvent(this.id.value, this.name.value));
   }
 

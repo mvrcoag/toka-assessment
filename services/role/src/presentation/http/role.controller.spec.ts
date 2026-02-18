@@ -54,13 +54,16 @@ describe('RoleController', () => {
       { execute: async () => true } as any,
     );
 
-    const result = await controller.create({
-      name: 'Admin',
-      canView: true,
-      canCreate: true,
-      canUpdate: true,
-      canDelete: true,
-    });
+    const result = await controller.create(
+      {
+        name: 'Admin',
+        canView: true,
+        canCreate: true,
+        canUpdate: true,
+        canDelete: true,
+      },
+      {} as any,
+    );
     expect(result.name).toBe('Admin');
   });
 
@@ -74,7 +77,7 @@ describe('RoleController', () => {
       { execute: async () => true } as any,
     );
 
-    const result = await controller.update('role-1', { name: 'Manager' });
+    const result = await controller.update('role-1', { name: 'Manager' }, {} as any);
     expect(result.id).toBe('role-1');
   });
 
@@ -88,6 +91,6 @@ describe('RoleController', () => {
       { execute: async () => true } as any,
     );
 
-    await expect(controller.remove('role-1')).resolves.toBeUndefined();
+    await expect(controller.remove('role-1', {} as any)).resolves.toBeUndefined();
   });
 });

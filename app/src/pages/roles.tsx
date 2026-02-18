@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { useAuth } from '@/hooks/use-auth'
 import { useRoles } from '@/hooks/use-roles'
 import type { Role } from '@/services/roles.service'
 
@@ -46,7 +47,13 @@ const defaultValues: RoleFormValues = {
 }
 
 export function RolesPage() {
-  const { roles, isLoading, isSaving, error, createRole, updateRole, removeRole } = useRoles()
+  const { user } = useAuth()
+  const abilities = user?.roleAbilities
+  const canView = abilities?.canView ?? false
+  const canCreate = abilities?.canCreate ?? false
+  const canUpdate = abilities?.canUpdate ?? false
+  const canDelete = abilities?.canDelete ?? false
+  const { roles, isLoading, isSaving, error, createRole, updateRole, removeRole } = useRoles(canView)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingRole, setEditingRole] = useState<Role | null>(null)
   const [deleteRole, setDeleteRole] = useState<Role | null>(null)
@@ -57,12 +64,18 @@ export function RolesPage() {
   })
 
   const openCreate = () => {
+    if (!canCreate) {
+      return
+    }
     setEditingRole(null)
     form.reset(defaultValues)
     setDialogOpen(true)
   }
 
   const openEdit = (role: Role) => {
+    if (!canUpdate) {
+      return
+    }
     setEditingRole(role)
     form.reset({
       name: role.name,
@@ -91,6 +104,7 @@ export function RolesPage() {
   }
 
   const confirmDelete = async () => {
+    if (!canDelete) return
     if (!deleteRole) return
     const success = await removeRole(deleteRole.id)
     if (success) {
@@ -112,53 +126,67 @@ export function RolesPage() {
           <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Roles</p>
           <h2 className="text-2xl font-semibold">Permission sets</h2>
         </div>
-        <Button onClick={openCreate}>New role</Button>
+        {canCreate ? <Button onClick={openCreate}>New role</Button> : null}
       </div>
 
-      <Card className="border bg-white/80 p-6 shadow-sm">
-        {error ? <p className="text-sm text-destructive">{error}</p> : null}
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Abilities</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {roles.map((role) => (
-              <TableRow key={role.id}>
-                <TableCell className="font-medium">{role.name}</TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                    {role.abilities.canView && <span>View</span>}
-                    {role.abilities.canCreate && <span>Create</span>}
-                    {role.abilities.canUpdate && <span>Update</span>}
-                    {role.abilities.canDelete && <span>Delete</span>}
-                  </div>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm" onClick={() => openEdit(role)}>
-                      Edit
-                    </Button>
-                    <Button variant="destructive" size="sm" onClick={() => setDeleteRole(role)}>
-                      Delete
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-            {!isLoading && roles.length === 0 ? (
+      {canView ? (
+        <Card className="border bg-white/80 p-6 shadow-sm">
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={3} className="text-center text-sm text-muted-foreground">
-                  No roles yet. Create the first one to continue.
-                </TableCell>
+                <TableHead>Name</TableHead>
+                <TableHead>Abilities</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-            ) : null}
-          </TableBody>
-        </Table>
-      </Card>
+            </TableHeader>
+            <TableBody>
+              {roles.map((role) => (
+                <TableRow key={role.id}>
+                  <TableCell className="font-medium">{role.name}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                      {role.abilities.canView && <span>View</span>}
+                      {role.abilities.canCreate && <span>Create</span>}
+                      {role.abilities.canUpdate && <span>Update</span>}
+                      {role.abilities.canDelete && <span>Delete</span>}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      {canUpdate ? (
+                        <Button variant="outline" size="sm" onClick={() => openEdit(role)}>
+                          Edit
+                        </Button>
+                      ) : null}
+                      {canDelete ? (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => setDeleteRole(role)}
+                        >
+                          Delete
+                        </Button>
+                      ) : null}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {!isLoading && roles.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center text-sm text-muted-foreground">
+                    No roles yet. Create the first one to continue.
+                  </TableCell>
+                </TableRow>
+              ) : null}
+            </TableBody>
+          </Table>
+        </Card>
+      ) : (
+        <Card className="border bg-white/80 p-6 text-sm text-muted-foreground shadow-sm">
+          Your role does not allow viewing roles.
+        </Card>
+      )}
 
       <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
         <DialogContent>
@@ -199,7 +227,10 @@ export function RolesPage() {
               <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSaving}>
+              <Button
+                type="submit"
+                disabled={isSaving || (editingRole ? !canUpdate : !canCreate)}
+              >
                 {editingRole ? 'Save changes' : 'Create role'}
               </Button>
             </DialogFooter>
@@ -219,7 +250,7 @@ export function RolesPage() {
             <Button variant="outline" onClick={() => setDeleteRole(null)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={confirmDelete} disabled={isSaving}>
+            <Button variant="destructive" onClick={confirmDelete} disabled={isSaving || !canDelete}>
               Delete role
             </Button>
           </DialogFooter>

@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { Separator } from '@/components/ui/separator'
+import { useAuth } from '@/hooks/use-auth'
 import { useAiChat } from '@/hooks/use-ai'
 import { MessageSquare, Sparkles } from 'lucide-react'
 
@@ -25,6 +26,8 @@ type ChatFormValues = z.infer<typeof chatSchema>
 const topKOptions = [3, 5, 8, 10]
 
 export function AiChatWidget() {
+  const { user } = useAuth()
+  const canView = user?.roleAbilities?.canView ?? false
   const [open, setOpen] = useState(false)
   const [expandedSources, setExpandedSources] = useState<string | null>(null)
   const { messages, isLoading, sendMessage, reset } = useAiChat()
@@ -48,6 +51,10 @@ export function AiChatWidget() {
     }
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, open])
+
+  if (!canView) {
+    return null
+  }
 
   return (
     <>
@@ -74,7 +81,9 @@ export function AiChatWidget() {
             </DialogHeader>
             <div className="flex-1 overflow-y-auto bg-muted/20 px-6 py-5">
               {sortedMessages.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Ask a question to get started.</p>
+                <p className="text-sm text-muted-foreground">
+                  Ask a question to get started.
+                </p>
               ) : (
                 <div className="flex flex-col gap-4">
                   {sortedMessages.map((message) => (
@@ -115,11 +124,16 @@ export function AiChatWidget() {
                             {expandedSources === message.id ? (
                               <div className="mt-2 space-y-2 text-xs text-muted-foreground">
                                 {message.sources.map((source) => (
-                                  <div key={source.doc_id} className="rounded-lg border bg-muted/40 p-2">
+                                  <div
+                                    key={source.doc_id}
+                                    className="rounded-lg border bg-muted/40 p-2"
+                                  >
                                     <p className="font-medium text-foreground">
                                       {source.source ?? 'source'}
                                     </p>
-                                    <p className="mt-1 break-all">{source.doc_id}</p>
+                                    <p className="mt-1 break-all">
+                                      {source.doc_id}
+                                    </p>
                                   </div>
                                 ))}
                               </div>
@@ -134,7 +148,10 @@ export function AiChatWidget() {
               <div ref={bottomRef} />
             </div>
             <Separator />
-            <form className="space-y-3 bg-white/90 p-4" onSubmit={form.handleSubmit(onSubmit)}>
+            <form
+              className="space-y-3 bg-white/90 p-4"
+              onSubmit={form.handleSubmit(onSubmit)}
+            >
               <div className="flex items-center gap-3">
                 <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                   Top K

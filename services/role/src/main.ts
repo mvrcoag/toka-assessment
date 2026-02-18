@@ -1,10 +1,14 @@
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { JsonLogger } from './infrastructure/logging/json-logger';
 import { ApplicationErrorFilter } from './presentation/http/filters/application-error.filter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const logger = new JsonLogger();
+  Logger.overrideLogger(logger);
+  const app = await NestFactory.create(AppModule, { logger });
+  app.useLogger(logger);
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

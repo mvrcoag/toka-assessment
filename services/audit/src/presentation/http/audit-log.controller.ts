@@ -6,9 +6,10 @@ import { AuditLog } from '../../domain/entities/audit-log';
 import { AuditLogResponseDto } from './dto/audit-log-response.dto';
 import { ListAuditLogsDto } from './dto/list-audit-logs.dto';
 import { AuthGuard } from './guards/auth.guard';
+import { RoleAbilitiesGuard } from './guards/role-abilities.guard';
 
 @Controller('logs')
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, RoleAbilitiesGuard)
 export class AuditLogController {
   constructor(
     private readonly getAuditLog: GetAuditLogUseCase,
