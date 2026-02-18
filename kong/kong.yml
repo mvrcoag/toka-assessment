@@ -1,0 +1,42 @@
+_format_version: "3.0"
+
+services:
+  - name: auth-service
+    url: http://auth:3001
+    routes:
+      - name: auth-route
+        paths:
+          - /auth
+        strip_path: true
+
+  - name: user-service
+    url: http://user:3002
+    routes:
+      - name: user-route
+        paths:
+          - /users
+        strip_path: true
+
+  - name: role-service
+    url: http://role:3003
+    routes:
+      - name: role-route
+        paths:
+          - /roles
+        strip_path: true
+
+  - name: audit-service
+    url: http://audit:3004
+    routes:
+      - name: audit-route
+        paths:
+          - /audit
+        strip_path: true
+
+  - name: ai-service
+    url: http://ai:3005
+    routes:
+      - name: ai-route
+        paths:
+          - /ai
+        strip_path: true
