@@ -75,6 +75,11 @@ Notas de inicialización:
 - Postgres y Mongo ejecutan scripts de init solo en el primer arranque (volumen vacío).
 - Si ya existen datos y necesitas re-ejecutar init: `docker compose down -v && docker compose up --build`.
 
+Usuarios por defecto (Postgres init):
+- Email: `user@toka.local`
+- Password: `toka-password`
+- Rol: `admin`
+
 ## Estructura del proyecto
 
 ```
