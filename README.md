@@ -1,8 +1,12 @@
 # Toka Assessment
 
-Video de ejecucion del proyecto:
+<center>
+
 [![Ver video de ejecucion](https://img.youtube.com/vi/EDAU50khNVA/hqdefault.jpg)](https://www.youtube.com/watch?v=EDAU50khNVA)
-Mira este video para ver el paso a paso de como correr el proyecto.
+
+<i>Mira este video para ver el paso a paso de como correr el proyecto.</i>
+
+</center>
 
 ## Cómo usar el proyecto
 
