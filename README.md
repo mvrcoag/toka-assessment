@@ -5,9 +5,65 @@
 Requisitos:
 - Docker + Docker Compose
 
+Configuración inicial:
+1. `cp .env.example .env`
+2. Configura los secretos obligatorios en `.env`.
+
+Secretos obligatorios (Auth):
+- `JWT_PRIVATE_KEY` y `JWT_PUBLIC_KEY`
+- Generación local:
+  ```bash
+  openssl genpkey -algorithm RSA -out jwt-private.pem -pkeyopt rsa_keygen_bits:2048
+  openssl rsa -in jwt-private.pem -pubout -out jwt-public.pem
+  ```
+- Para pegar en `.env` (una sola línea con `\n`):
+  ```bash
+  awk '{printf "%s\\n", $0}' jwt-private.pem
+  awk '{printf "%s\\n", $0}' jwt-public.pem
+  ```
+
+Secretos opcionales:
+- `OPENAI_API_KEY` (solo si vas a usar el servicio AI)
+
 Pasos rápidos:
 1. `docker compose up --build`
 2. Gateway: `http://localhost:8000`
+3. Frontend: `http://localhost:3000`
+
+### Evaluación básica de respuestas (AI)
+
+Script standalone para medir latencia, costo de tokens (input/output) y validación básica de calidad:
+
+```bash
+docker compose exec ai python evaluate_responses.py --question "List roles" --top-k 5
+```
+
+Varias preguntas:
+
+```bash
+docker compose exec ai python evaluate_responses.py \
+  --question "How many users exist?" \
+  --question "Show recent audit activity"
+```
+
+Archivo de preguntas (`.txt` o `.json`):
+
+```bash
+docker compose exec ai python evaluate_responses.py --questions-file questions.txt
+```
+
+Coste por 1K tokens (opcional):
+
+```bash
+docker compose exec \
+  -e OPENAI_INPUT_COST_PER_1K=0.00015 \
+  -e OPENAI_OUTPUT_COST_PER_1K=0.00060 \
+  ai python evaluate_responses.py --question "..."
+```
+
+Notas:
+- Usa las mismas variables de entorno que el servicio AI (`OPENAI_API_KEY`, `CHROMA_URL`, etc.).
+- Si `tiktoken` no está instalado, usa una estimación simple por caracteres.
 
 Endpoints principales (via Kong):
 - Auth (OIDC/OAuth2): `http://localhost:8000/auth/.well-known/openid-configuration`
@@ -47,6 +103,15 @@ src/
 ├── infrastructure/
 └── presentation/
 ```
+
+## Documentación adicional
+
+- `docs/architecture.md`
+- `docs/technical-justification.md`
+- `docs/ddd-clean-architecture.md`
+- `docs/docker-compose-design.md`
+- `docs/prompt-engineering.md`
+- `docs/performance-under-pressure.md`
 
 ## Justificación de decisiones técnicas
 

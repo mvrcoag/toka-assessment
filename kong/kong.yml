@@ -15,6 +15,12 @@ plugins:
         - Authorization
         - Content-Type
       max_age: 3600
+  - name: rate-limiting
+    config:
+      minute: 60
+      hour: 1000
+      limit_by: ip
+      policy: local
 
 services:
   - name: auth-service
