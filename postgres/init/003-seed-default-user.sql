@@ -4,6 +4,6 @@ values (
   'Toka User',
   'user@toka.local',
   crypt('toka-password', gen_salt('bf')),
-  (select id from roles where name = 'user' limit 1)
+  (select id from roles where name = 'admin' limit 1)
 )
 on conflict (email) do nothing;
