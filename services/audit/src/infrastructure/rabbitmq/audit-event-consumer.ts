@@ -1,4 +1,4 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import * as amqp from 'amqplib';
 import { CreateAuditLogUseCase } from '../../application/use-cases/create-audit-log.use-case';
 import { AuditConfig } from '../config/audit.config';
@@ -11,8 +11,10 @@ interface EventEnvelope {
 
 @Injectable()
 export class AuditEventConsumer implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(AuditEventConsumer.name);
   private connection?: amqp.ChannelModel;
   private channel?: amqp.Channel;
+  private isShuttingDown = false;
 
   constructor(
     private readonly config: AuditConfig,
@@ -20,24 +22,11 @@ export class AuditEventConsumer implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   async onModuleInit(): Promise<void> {
-    const connection = await amqp.connect(this.config.rabbitmqUrl);
-    const channel = await connection.createChannel();
-    await channel.assertExchange(this.config.rabbitmqExchange, 'topic', {
-      durable: true,
-    });
-    const queue = await channel.assertQueue(this.config.rabbitmqQueue, {
-      durable: true,
-    });
-    await channel.bindQueue(queue.queue, this.config.rabbitmqExchange, '#');
-
-    await channel.consume(queue.queue, (msg) => this.handleMessage(msg), {
-      noAck: false,
-    });
-    this.connection = connection;
-    this.channel = channel;
+    void this.connectWithRetry();
   }
 
   async onModuleDestroy(): Promise<void> {
+    this.isShuttingDown = true;
     if (this.channel) {
       await this.channel.close();
     }
@@ -66,10 +55,46 @@ export class AuditEventConsumer implements OnModuleInit, OnModuleDestroy {
         occurredAt,
       });
     } catch {
-      // swallow to prevent infinite retry loops
+      this.logger.warn('Failed to process audit event');
     } finally {
       this.channel.ack(message);
     }
+  }
+
+  private async connectWithRetry(): Promise<void> {
+    let attempt = 0;
+
+    while (!this.isShuttingDown) {
+      try {
+        const connection = await amqp.connect(this.config.rabbitmqUrl);
+        const channel = await connection.createChannel();
+        await channel.assertExchange(this.config.rabbitmqExchange, 'topic', {
+          durable: true,
+        });
+        const queue = await channel.assertQueue(this.config.rabbitmqQueue, {
+          durable: true,
+        });
+        await channel.bindQueue(queue.queue, this.config.rabbitmqExchange, '#');
+        await channel.consume(queue.queue, (msg) => this.handleMessage(msg), {
+          noAck: false,
+        });
+        this.connection = connection;
+        this.channel = channel;
+        this.logger.log('RabbitMQ consumer connected');
+        return;
+      } catch (error) {
+        attempt += 1;
+        const delay = Math.min(30000, 1000 * Math.pow(2, attempt));
+        this.logger.warn(
+          `RabbitMQ connection failed (attempt ${attempt}); retrying in ${delay}ms`,
+        );
+        await this.sleep(delay);
+      }
+    }
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private parseDate(value: string | undefined): Date | undefined {

@@ -39,13 +39,15 @@ import { UserEntity } from './typeorm/user.entity';
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
-      inject: [AuthConfig],
-      useFactory: (config: AuthConfig) => ({
-        type: 'postgres',
-        url: config.postgresUrl,
-        entities: [UserEntity],
-        synchronize: false,
-      }),
+      useFactory: () => {
+        const config = new AuthConfig();
+        return {
+          type: 'postgres',
+          url: config.postgresUrl,
+          entities: [UserEntity],
+          synchronize: false,
+        };
+      },
     }),
     TypeOrmModule.forFeature([UserEntity]),
   ],

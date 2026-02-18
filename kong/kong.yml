@@ -15,7 +15,7 @@ services:
       - name: user-route
         paths:
           - /users
-        strip_path: true
+        strip_path: false
 
   - name: role-service
     url: http://role:3003
@@ -23,15 +23,15 @@ services:
       - name: role-route
         paths:
           - /roles
-        strip_path: true
+        strip_path: false
 
   - name: audit-service
     url: http://audit:3004
     routes:
       - name: audit-route
         paths:
-          - /audit
-        strip_path: true
+          - /logs
+        strip_path: false
 
   - name: ai-service
     url: http://ai:3005

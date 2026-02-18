@@ -17,13 +17,15 @@ import { RabbitMqEventBus } from './rabbitmq/rabbitmq.event-bus';
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
-      inject: [RoleConfig],
-      useFactory: (config: RoleConfig) => ({
-        type: 'postgres',
-        url: config.postgresUrl,
-        entities: [RoleEntity],
-        synchronize: false,
-      }),
+      useFactory: () => {
+        const config = new RoleConfig();
+        return {
+          type: 'postgres',
+          url: config.postgresUrl,
+          entities: [RoleEntity],
+          synchronize: false,
+        };
+      },
     }),
     TypeOrmModule.forFeature([RoleEntity]),
   ],

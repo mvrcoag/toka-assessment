@@ -1,4 +1,4 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import * as amqp from 'amqplib';
 import { EventBus } from '../../application/ports/event-bus';
 import { DomainEvent } from '../../domain/events/domain-event';
@@ -6,22 +6,19 @@ import { AuthConfig } from '../config/auth.config';
 
 @Injectable()
 export class RabbitMqEventBus implements EventBus, OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(RabbitMqEventBus.name);
   private connection?: amqp.ChannelModel;
   private channel?: amqp.Channel;
+  private isShuttingDown = false;
 
   constructor(private readonly config: AuthConfig) {}
 
   async onModuleInit(): Promise<void> {
-    const connection = await amqp.connect(this.config.rabbitmqUrl);
-    const channel = await connection.createChannel();
-    await channel.assertExchange(this.config.rabbitmqExchange, 'topic', {
-      durable: true,
-    });
-    this.connection = connection;
-    this.channel = channel;
+    void this.connectWithRetry();
   }
 
   async onModuleDestroy(): Promise<void> {
+    this.isShuttingDown = true;
     if (this.channel) {
       await this.channel.close();
     }
@@ -32,7 +29,8 @@ export class RabbitMqEventBus implements EventBus, OnModuleInit, OnModuleDestroy
 
   async publish(event: DomainEvent): Promise<void> {
     if (!this.channel) {
-      throw new Error('RabbitMQ channel not initialized');
+      this.logger.warn('RabbitMQ channel not ready; event dropped');
+      return;
     }
 
     const routingKey = this.toRoutingKey(event.name);
@@ -54,6 +52,35 @@ export class RabbitMqEventBus implements EventBus, OnModuleInit, OnModuleDestroy
     for (const event of events) {
       await this.publish(event);
     }
+  }
+
+  private async connectWithRetry(): Promise<void> {
+    let attempt = 0;
+
+    while (!this.isShuttingDown) {
+      try {
+        const connection = await amqp.connect(this.config.rabbitmqUrl);
+        const channel = await connection.createChannel();
+        await channel.assertExchange(this.config.rabbitmqExchange, 'topic', {
+          durable: true,
+        });
+        this.connection = connection;
+        this.channel = channel;
+        this.logger.log('RabbitMQ connected');
+        return;
+      } catch (error) {
+        attempt += 1;
+        const delay = Math.min(30000, 1000 * Math.pow(2, attempt));
+        this.logger.warn(
+          `RabbitMQ connection failed (attempt ${attempt}); retrying in ${delay}ms`,
+        );
+        await this.sleep(delay);
+      }
+    }
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private toRoutingKey(name: string): string {

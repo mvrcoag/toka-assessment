@@ -15,13 +15,15 @@ import { AuditEventConsumer } from './rabbitmq/audit-event-consumer';
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
-      inject: [AuditConfig],
-      useFactory: (config: AuditConfig) => ({
-        type: 'mongodb',
-        url: config.mongoUrl,
-        entities: [AuditLogEntity],
-        synchronize: false,
-      }),
+      useFactory: () => {
+        const config = new AuditConfig();
+        return {
+          type: 'mongodb',
+          url: config.mongoUrl,
+          entities: [AuditLogEntity],
+          synchronize: false,
+        };
+      },
     }),
     TypeOrmModule.forFeature([AuditLogEntity]),
   ],
