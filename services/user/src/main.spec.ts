@@ -1,5 +1,6 @@
 describe('main bootstrap', () => {
   it('creates nest app and listens', async () => {
+    const useLogger = jest.fn();
     const useGlobalPipes = jest.fn();
     const useGlobalFilters = jest.fn();
     const listen = jest.fn().mockResolvedValue(undefined);
@@ -7,6 +8,7 @@ describe('main bootstrap', () => {
     jest.resetModules();
     const core = require('@nestjs/core');
     jest.spyOn(core.NestFactory, 'create').mockResolvedValue({
+      useLogger,
       useGlobalPipes,
       useGlobalFilters,
       listen,

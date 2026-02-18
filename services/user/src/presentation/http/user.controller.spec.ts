@@ -44,12 +44,17 @@ describe('UserController', () => {
         password: 'secret123',
         roleId: 'role-1',
       },
+      { user: { sub: 'actor-1', role: 'role-1' } } as any,
       undefined,
-      {} as any,
     );
     expect(created.email).toBe('user@toka.local');
 
-    const updated = await controller.update('user-1', { name: 'New Name' }, undefined, {} as any);
+    const updated = await controller.update(
+      'user-1',
+      { name: 'New Name' },
+      { user: { sub: 'actor-1', role: 'role-1' } } as any,
+      undefined,
+    );
     expect(updated.name).toBe('Toka User');
   });
 

@@ -1,5 +1,9 @@
 # Toka Assessment
 
+Video de ejecucion del proyecto:
+[![Ver video de ejecucion](https://img.youtube.com/vi/EDAU50khNVA/hqdefault.jpg)](https://www.youtube.com/watch?v=EDAU50khNVA)
+Mira este video para ver el paso a paso de como correr el proyecto.
+
 ## Cómo usar el proyecto
 
 Requisitos:
@@ -29,6 +33,16 @@ Pasos rápidos:
 1. `docker compose up --build`
 2. Gateway: `http://localhost:8000`
 3. Frontend: `http://localhost:3000`
+
+Test con coverage
+- Ejecutar todo en Docker: `./scripts/run-tests-docker.sh`
+- Reportes: Jest en `services/<service>/coverage/` y AI en `services/ai/coverage.xml`
+- Coverage actual (ultima ejecucion en Docker):
+- auth: 83.96%
+- user: 76.76%
+- role: 78.38%
+- audit: 72.59%
+- ai: 93.77%
 
 ### Evaluación básica de respuestas (AI)
 
