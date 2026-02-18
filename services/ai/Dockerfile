@@ -8,7 +8,12 @@ ENV PORT=8000
 
 COPY pyproject.toml ./
 RUN pip install --no-cache-dir --upgrade pip \
-  && pip install --no-cache-dir "fastapi[standard]>=0.129.0"
+  && pip install --no-cache-dir \
+    "fastapi[standard]>=0.129.0" \
+    "chromadb>=1.1.0" \
+    "httpx>=0.28.1" \
+    "openai>=1.108.0" \
+    "pyjwt[crypto]>=2.10.1"
 
 COPY . .
 
