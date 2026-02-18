@@ -53,8 +53,14 @@ services:
     environment:
       PORT: 3002
       NODE_ENV: production
+      DATABASE_URL: postgresql://toka:toka_password@postgres:5432/toka
+      AUTH_ISSUER: http://localhost:8000/auth
+      AUTH_JWKS_URI: http://kong:8000/auth/.well-known/jwks.json
     networks:
       - toka
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   role:
     build:
