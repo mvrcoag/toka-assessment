@@ -9,6 +9,9 @@ import { GetUserInfoUseCase } from '../../application/use-cases/get-user-info.us
 import { LoginAndIssueCodeUseCase } from '../../application/use-cases/login-and-issue-code.use-case';
 import { RefreshTokenUseCase } from '../../application/use-cases/refresh-token.use-case';
 import { ValidateAuthorizationRequestUseCase } from '../../application/use-cases/validate-authorization-request.use-case';
+import { AuthorizeBodyDto } from './dto/authorize-body.dto';
+import { AuthorizeQueryDto } from './dto/authorize-query.dto';
+import { TokenRequestDto } from './dto/token-request.dto';
 import { renderLoginForm } from './auth.view';
 
 @Controller()
@@ -22,9 +25,10 @@ export class AuthController {
   ) {}
 
   @Get('oauth/authorize')
-  async showLogin(@Query() query: Record<string, unknown>, @Res() res: Response) {
+  async showLogin(@Query() query: AuthorizeQueryDto, @Res() res: Response) {
     try {
-      const request = await this.validateAuthorizationRequest.execute(query);
+      const queryRecord = { ...query } as Record<string, unknown>;
+      const request = await this.validateAuthorizationRequest.execute(queryRecord);
       res.type('html').send(
         renderLoginForm({
           clientId: request.clientId,
@@ -35,16 +39,17 @@ export class AuthController {
         }),
       );
     } catch (error) {
-      this.handleFormError(res, error, undefined, query);
+      this.handleFormError(res, error, undefined, { ...query } as Record<string, unknown>);
     }
   }
 
   @Post('oauth/authorize')
-  async handleLogin(@Body() body: Record<string, unknown>, @Res() res: Response) {
+  async handleLogin(@Body() body: AuthorizeBodyDto, @Res() res: Response) {
     try {
-      const request = await this.validateAuthorizationRequest.execute(body);
-      const email = this.getString(body.email);
-      const password = this.getString(body.password);
+      const bodyRecord = { ...body } as Record<string, unknown>;
+      const request = await this.validateAuthorizationRequest.execute(bodyRecord);
+      const email = body.email;
+      const password = body.password;
 
       const code = await this.loginAndIssueCode.execute({
         authorizationRequest: request,
@@ -60,11 +65,11 @@ export class AuthController {
 
       res.redirect(redirectUrl.toString());
     } catch (error) {
-      const clientId = this.getString(body.client_id);
-      const redirectUri = this.getString(body.redirect_uri);
-      const scope = this.getString(body.scope);
-      const state = this.getString(body.state, true) ?? undefined;
-      const nonce = this.getString(body.nonce, true) ?? undefined;
+      const clientId = body.client_id;
+      const redirectUri = body.redirect_uri;
+      const scope = body.scope;
+      const state = body.state;
+      const nonce = body.nonce;
 
       let fallbackRequest: AuthorizationRequest | undefined;
       if (clientId && redirectUri && scope) {
@@ -82,21 +87,21 @@ export class AuthController {
         }
       }
 
-      this.handleFormError(res, error, fallbackRequest, body);
+      this.handleFormError(res, error, fallbackRequest, { ...body } as Record<string, unknown>);
     }
   }
 
   @Post('oauth/token')
-  async token(@Body() body: Record<string, unknown>): Promise<Record<string, unknown>> {
+  async token(@Body() body: TokenRequestDto): Promise<Record<string, unknown>> {
     try {
-      const grantType = this.getString(body.grant_type);
+      const grantType = body.grant_type;
 
       if (grantType === 'authorization_code') {
         const tokens = await this.exchangeAuthorizationCode.execute({
-          code: this.getString(body.code),
-          clientId: this.getString(body.client_id),
-          clientSecret: this.getString(body.client_secret),
-          redirectUri: this.getString(body.redirect_uri),
+          code: body.code ?? '',
+          clientId: body.client_id,
+          clientSecret: body.client_secret,
+          redirectUri: body.redirect_uri ?? '',
         });
 
         return this.mapTokenResponse(tokens);
@@ -104,9 +109,9 @@ export class AuthController {
 
       if (grantType === 'refresh_token') {
         const tokens = await this.refreshToken.execute({
-          refreshToken: this.getString(body.refresh_token),
-          clientId: this.getString(body.client_id),
-          clientSecret: this.getString(body.client_secret),
+          refreshToken: body.refresh_token ?? '',
+          clientId: body.client_id,
+          clientSecret: body.client_secret,
         });
 
         return this.mapTokenResponse(tokens);
@@ -151,19 +156,6 @@ export class AuthController {
     return token.trim();
   }
 
-  private getString(value: unknown, allowEmpty: boolean = false): string {
-    if (typeof value !== 'string') {
-      return '';
-    }
-
-    const trimmed = value.trim();
-    if (!allowEmpty && !trimmed) {
-      return '';
-    }
-
-    return trimmed;
-  }
-
   private handleFormError(
     res: Response,
     error: unknown,
@@ -185,7 +177,7 @@ export class AuthController {
           scope: request.scope.toString(),
           state: request.state,
           nonce: request.nonce,
-          email: this.getString(raw?.email, true),
+          email: this.readOptionalString(raw?.email),
           error: errorMessage,
         }),
       );
@@ -205,5 +197,14 @@ export class AuthController {
     }
 
     throw new HttpException({ error: 'Internal server error' }, 500);
+  }
+
+  private readOptionalString(value: unknown): string | undefined {
+    if (typeof value !== 'string') {
+      return undefined;
+    }
+
+    const trimmed = value.trim();
+    return trimmed ? trimmed : undefined;
   }
 }
