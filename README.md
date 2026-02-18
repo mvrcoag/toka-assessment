@@ -1,0 +1,93 @@
+# Toka Assessment
+
+## Cómo usar el proyecto
+
+Requisitos:
+- Docker + Docker Compose
+
+Pasos rápidos:
+1. `docker compose up --build`
+2. Gateway: `http://localhost:8000`
+
+Endpoints principales (via Kong):
+- Auth (OIDC/OAuth2): `http://localhost:8000/auth/.well-known/openid-configuration`
+- Roles: `http://localhost:8000/roles`
+- Usuarios: `http://localhost:8000/users`
+- Logs (audit): `http://localhost:8000/logs`
+
+Notas de inicialización:
+- Postgres y Mongo ejecutan scripts de init solo en el primer arranque (volumen vacío).
+- Si ya existen datos y necesitas re-ejecutar init: `docker compose down -v && docker compose up --build`.
+
+## Estructura del proyecto
+
+```
+.
+├── docker-compose.yml
+├── kong/
+│   └── kong.yml
+├── postgres/
+│   └── init/
+├── mongodb/
+│   └── init/
+└── services/
+    ├── auth/
+    ├── user/
+    ├── role/
+    ├── audit/
+    └── ai/
+```
+
+Cada servicio sigue la misma organizacion interna:
+
+```
+src/
+├── domain/
+├── application/
+├── infrastructure/
+└── presentation/
+```
+
+## Justificación de decisiones técnicas
+
+- NestJS: framework modular y consistente para microservicios HTTP y capas limpias.
+- TypeORM: ORM flexible para Postgres y Mongo; facilita repositorios y entidades.
+- Postgres 16: transaccional y consistente para usuarios/roles.
+- MongoDB: flexible para logs con esquemas dinamicos.
+- Redis: tokens revocados y estado temporal de auth.
+- Kong (db-less): gateway simple, sin dependencia de DB, ideal para el alcance actual.
+- RabbitMQ: mensajeria confiable para eventos de dominio y desacoplamiento.
+- OAuth2/OIDC: estandar de autenticacion/autorizacion.
+- Docker Compose: entorno reproducible para la prueba tecnica.
+
+## Flujo de datos entre microservicios (resumen)
+
+1) Auth emite JWTs (access/id/refresh).
+2) User y Role validan el token con JWKS del auth (via Kong).
+3) User y Role publican eventos de dominio en RabbitMQ (exchange `toka.events`).
+4) Audit consume todos los eventos y los guarda como logs en MongoDB.
+
+## DDD y Clean Architecture
+
+- Domain: entidades, value objects y eventos (logica de negocio pura).
+- Application: casos de uso y puertos (contratos).
+- Infrastructure: adaptadores (ORM, RabbitMQ, Redis, JWT, etc.).
+- Presentation: controllers, DTOs y validacion.
+- Dependencias siempre apuntan hacia el dominio.
+
+## Key points (para la prueba técnica)
+
+- Arquitectura limpia por servicio con DDD.
+- Autenticacion estandar OIDC/OAuth2.
+- Gateway centralizado con Kong.
+- Mensajeria asincrona con RabbitMQ.
+- Persistencia poliglota (Postgres + Mongo + Redis).
+- Tests unitarios con alta cobertura en servicios críticos.
+
+## Particularidades por servicio
+
+- Auth: servidor OAuth2/OIDC, login propio, JWKS y tokens; revocación en Redis y usuarios en Postgres.
+- User: CRUD de usuarios, eventos de dominio publicados a RabbitMQ, persistencia en Postgres.
+- Role: CRUD de roles y habilidades, eventos publicados a RabbitMQ, persistencia en Postgres.
+- Audit: solo lectura HTTP; consume eventos desde RabbitMQ y guarda logs en MongoDB.
+- AI: servicio FastAPI base para futuras capacidades de IA.
